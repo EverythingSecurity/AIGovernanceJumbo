@@ -14,12 +14,18 @@ Repository: <https://github.com/EverythingSecurity/AIGovernanceJumbo> · Explore
 ## Quick start
 
 ```bash
-pip install -e .                     # Python 3.9+, no runtime dependencies
+git clone https://github.com/EverythingSecurity/AIGovernanceJumbo.git
+cd AIGovernanceJumbo
+python3 -m venv .venv && source .venv/bin/activate    # Python 3.9+
+python -m pip install -e .                             # no runtime dependencies
+
 aicontrols search "prompt injection"
 aicontrols show gdpr:Art.33
 aicontrols crosswalk gdpr:Art.33     # same-domain controls in other frameworks
 aicontrols export -f eu-ai-act --format csv -o eu_ai_act.csv
 ```
+
+`aicontrols` is only on your PATH while the virtual environment is active.
 
 ```python
 import aicontrols

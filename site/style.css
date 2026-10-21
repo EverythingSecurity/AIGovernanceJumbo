@@ -76,8 +76,9 @@ button.link { border: 0; background: none; padding: 0; color: var(--accent); tex
 .scroll { overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
 .heat { border-collapse: collapse; font-size: .85rem; width: 100%; }
 .heat th, .heat td { border: 1px solid var(--line); padding: 4px 6px; text-align: center; }
-.heat thead th { position: sticky; top: 0; background: var(--panel); writing-mode: vertical-rl; transform: rotate(180deg);
-  white-space: nowrap; height: 9.5em; vertical-align: bottom; }
+.heat thead th { position: sticky; top: 0; background: var(--panel); vertical-align: bottom; font-size: .75rem;
+  font-weight: 600; line-height: 1.2; min-width: 4.2rem; max-width: 5.5rem; }
+.heat thead th:first-child { text-align: left; min-width: 220px; }
 .heat tbody th { text-align: left; font-weight: 500; position: sticky; left: 0; background: var(--panel); min-width: 220px; max-width: 320px; }
 .heat td button { all: unset; display: block; width: 100%; min-width: 2em; padding: 3px 0; cursor: pointer; border-radius: 3px; }
 .heat td button:focus-visible { outline: 3px solid var(--focus); }

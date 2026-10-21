@@ -7,3 +7,4 @@ dist/
 build/
 _site/
 .DS_Store
+*.csv

@@ -145,7 +145,7 @@ function renderHeatmap() {
   }
   const table = $("heat");
   fill(table,
-    el("thead", {}, el("tr", {}, el("th", { scope: "col", style: "writing-mode:horizontal-tb;transform:none;height:auto;text-align:left" }, "Domain"),
+    el("thead", {}, el("tr", {}, el("th", { scope: "col" }, "Domain"),
       frameworks.map((f) => el("th", { scope: "col", title: f.full_name }, shortName(f))))),
     el("tbody", {}, domains.map((d) => el("tr", {}, el("th", { scope: "row" }, d.name),
       frameworks.map((f) => {
@@ -192,7 +192,7 @@ async function init() {
   try {
     const [c, f, d] = await Promise.all([loadJSON("controls.json"), loadJSON("frameworks.json"), loadJSON("domains.json")]);
     controls = c.controls; frameworks = f.frameworks; domains = d.domains;
-    $("meta").textContent = `Dataset v${c.dataset_version} · ${controls.length} controls · ${frameworks.length} frameworks · ${domains.length} domains`;
+    $("meta").textContent = `Dataset v${c.dataset_version} · ${controls.filter((x) => x.kind !== "info").length} controls · ${frameworks.length} frameworks · ${domains.length} domains`;
   } catch (e) {
     $("status").textContent = `Could not load the dataset (${e.message}). If you opened this file directly, serve the repository root instead: python3 -m http.server, then open /site/.`;
     return;
