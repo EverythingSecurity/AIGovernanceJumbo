@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/EverythingSecurity/AIGovernanceJumbo/main/schema/controls.schema.json",
+  "title": "AI Controls Framework - controls dataset",
+  "description": "Schema for data/controls.json. SPDX-License-Identifier: Apache-2.0",
+  "type": "object",
+  "required": ["schema_version", "dataset_version", "license", "disclaimer", "controls"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "dataset_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "license": {"const": "Apache-2.0"},
+    "copyright": {"type": "string"},
+    "disclaimer": {"type": "string", "minLength": 1},
+    "controls": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/control"}}
+  },
+  "$defs": {
+    "slug": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+    "text": {"type": ["string", "null"], "minLength": 1},
+    "control": {
+      "type": "object",
+      "required": ["id", "framework_id", "ref", "title", "kind", "domain_id",
+                   "requirement", "cia", "evidence"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9-]+:\\S+$",
+               "description": "<framework_id>:<ref>, unique across the dataset. The framework id ends at the first colon; refs may themselves contain colons."},
+        "framework_id": {"$ref": "#/$defs/slug"},
+        "ref": {"type": "string", "minLength": 1,
+                "description": "Clause, article or item reference as written in the source framework."},
+        "title": {"type": "string"},
+        "kind": {"enum": ["control", "info"],
+                 "description": "'info' rows identify the framework (id, scope) and are not controls."},
+        "domain_id": {"$ref": "#/$defs/slug"},
+        "section": {"$ref": "#/$defs/text"},
+        "requirement": {"type": "string", "minLength": 1},
+        "cia": {
+          "type": "object",
+          "required": ["c", "i", "a"],
+          "additionalProperties": false,
+          "properties": {"c": {"type": "boolean"}, "i": {"type": "boolean"}, "a": {"type": "boolean"}},
+          "description": "Which of Confidentiality, Integrity, Availability the item primarily protects."
+        },
+        "security_note": {"$ref": "#/$defs/text"},
+        "evidence": {"$ref": "#/$defs/text"},
+        "extras": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "minLength": 1},
+          "description": "Framework-specific extra fields (e.g. mitigations, roles, cross_reference)."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+AI Controls Framework
+Copyright 2026 Mayank
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The controls, mappings, crosswalk, domain groupings, C/I/A classifications and
+all condensed requirement text in this repository are original paraphrases and
+analysis by the authors. They are not verbatim reproductions of any standard.
+
+Third-party frameworks referenced (names, clause/article numbers and concepts
+only; trademarks belong to their respective owners):
+
+- ISO/IEC 42001, 42005, 27001, 27701, 27090, 5181, 31700, 17021-1:
+  (c) ISO/IEC. Referenced by clause number and paraphrased only. Obtain the
+  standards from ISO or your national standards body.
+- EU AI Act (Regulation (EU) 2024/1689), GDPR (Regulation (EU) 2016/679),
+  DORA (Regulation (EU) 2022/2554): EU legislation, referenced by article.
+- NIST AI RMF and NIST ARIA: U.S. NIST publications, referenced and paraphrased.
+- OECD AI Principles: (c) OECD, referenced and paraphrased.
+- MITRE ATLAS: (c) The MITRE Corporation; ATLAS data is released under
+  Apache-2.0. Tactic/technique names are used for reference.
+- OWASP Top 10 for LLM Applications: (c) OWASP Foundation, published under
+  CC BY-SA 4.0. Entries here are paraphrased; see "OWASP" in DISCLAIMER.md.
+- FAIR (Factor Analysis of Information Risk): (c) FAIR Institute / The Open
+  Group. Concepts paraphrased.
+- Privacy by Design: A. Cavoukian's seven foundational principles, paraphrased.
+- DAMA-DMBOK: knowledge-area names used for reference only.

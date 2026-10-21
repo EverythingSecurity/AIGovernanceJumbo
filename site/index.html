@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Controls Explorer</title>
+<meta name="description" content="Search and cross-map AI governance and security controls across ISO 42001, 27001, EU AI Act, GDPR, NIST AI RMF, MITRE ATLAS and more.">
+<link rel="stylesheet" href="style.css">
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>AI Controls Explorer</h1>
+    <p class="sub">Find a control, then see what else in other frameworks covers the same ground.</p>
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" id="tab-explore" aria-controls="view-explore" aria-selected="true">Explore</button>
+      <button role="tab" id="tab-heatmap" aria-controls="view-heatmap" aria-selected="false">Coverage map</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <p id="status" role="status" class="muted">Loading dataset…</p>
+
+  <section id="view-explore" role="tabpanel" aria-labelledby="tab-explore" hidden>
+    <form class="filters" id="filters" role="search" onsubmit="return false">
+      <label class="grow">Search
+        <input id="q" type="search" placeholder="e.g. prompt injection, breach notification, human oversight" autocomplete="off">
+      </label>
+      <label>Framework
+        <select id="fw"><option value="">All frameworks</option></select>
+      </label>
+      <label>Domain
+        <select id="dom"><option value="">All domains</option></select>
+      </label>
+      <fieldset class="cia">
+        <legend>Protects</legend>
+        <label><input type="checkbox" id="cia-c"> C</label>
+        <label><input type="checkbox" id="cia-i"> I</label>
+        <label><input type="checkbox" id="cia-a"> A</label>
+      </fieldset>
+      <button type="button" id="reset" class="ghost">Reset</button>
+    </form>
+
+    <div class="split">
+      <div>
+        <p id="count" class="muted" aria-live="polite"></p>
+        <ul id="results" class="results"></ul>
+        <button type="button" id="more" class="ghost" hidden>Show more</button>
+      </div>
+      <aside id="detail" class="detail" aria-live="polite" tabindex="-1">
+        <p class="muted">Select a control to see its requirement, evidence to collect, and related controls in other frameworks.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section id="view-heatmap" role="tabpanel" aria-labelledby="tab-heatmap" hidden>
+    <p class="muted">Number of controls per domain and framework. Select a cell to list them. Domains with many frameworks are where one programme can satisfy several obligations at once.</p>
+    <div class="scroll"><table id="heat" class="heat"></table></div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <p><strong>Planning aid only, not legal or audit advice.</strong> Requirement text is a condensed paraphrase; verify against the source standard or law. CIA tags, domains and cross-framework groupings are expert judgement.</p>
+  <p id="meta" class="muted"></p>
+  <p class="muted">Licensed under Apache-2.0. Standards remain the property of their publishers.</p>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>

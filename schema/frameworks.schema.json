@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AI Controls Framework - framework registry",
+  "description": "Schema for data/frameworks.json. SPDX-License-Identifier: Apache-2.0",
+  "type": "object",
+  "required": ["schema_version", "dataset_version", "frameworks"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "dataset_version": {"type": "string"},
+    "license": {"type": "string"},
+    "copyright": {"type": "string"},
+    "disclaimer": {"type": "string"},
+    "frameworks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "full_name", "kind", "publisher", "source_url",
+                     "control_count", "last_verified"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+          "name": {"type": "string"},
+          "full_name": {"type": "string"},
+          "kind": {"enum": ["standard", "regulation", "framework", "threat-catalogue", "methodology"]},
+          "publisher": {"type": "string"},
+          "source_url": {"type": ["string", "null"], "pattern": "^https://"},
+          "control_count": {"type": "integer", "minimum": 0},
+          "last_verified": {"type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$"}
+        }
+      }
+    }
+  }
+}

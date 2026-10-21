@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AI Controls Framework - domain crosswalk",
+  "description": "Schema for data/domains.json. SPDX-License-Identifier: Apache-2.0",
+  "type": "object",
+  "required": ["schema_version", "dataset_version", "domains"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "dataset_version": {"type": "string"},
+    "license": {"type": "string"},
+    "copyright": {"type": "string"},
+    "disclaimer": {"type": "string"},
+    "domains": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description", "consolidation_guidance", "control_ids"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+          "name": {"type": "string"},
+          "description": {"type": ["string", "null"]},
+          "consolidation_guidance": {"type": ["string", "null"]},
+          "control_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true}
+        }
+      }
+    }
+  }
+}

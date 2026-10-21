@@ -1,0 +1,189 @@
+{
+  "schema_version": "1.0",
+  "dataset_version": "0.1.0",
+  "license": "Apache-2.0",
+  "copyright": "Copyright 2026 Mayank",
+  "disclaimer": "Not legal or audit advice. Requirement text is a condensed paraphrase; verify against the authoritative source. CIA classifications, domain groupings and cross-framework mappings are expert judgement. Provided AS IS. Standards referenced remain the property of their publishers; see NOTICE and DISCLAIMER.md.",
+  "frameworks": [
+    {
+      "id": "iso-42001",
+      "name": "ISO/IEC 42001",
+      "full_name": "ISO/IEC 42001:2023",
+      "kind": "standard",
+      "publisher": "ISO/IEC",
+      "source_url": null,
+      "control_count": 70,
+      "last_verified": null
+    },
+    {
+      "id": "iso-27001",
+      "name": "ISO/IEC 27001",
+      "full_name": "ISO/IEC 27001:2022",
+      "kind": "standard",
+      "publisher": "ISO/IEC",
+      "source_url": null,
+      "control_count": 123,
+      "last_verified": null
+    },
+    {
+      "id": "iso-27701",
+      "name": "ISO/IEC 27701",
+      "full_name": "ISO/IEC 27701",
+      "kind": "standard",
+      "publisher": "ISO/IEC",
+      "source_url": null,
+      "control_count": 22,
+      "last_verified": null
+    },
+    {
+      "id": "iso-42005",
+      "name": "ISO/IEC 42005",
+      "full_name": "ISO/IEC 42005",
+      "kind": "standard",
+      "publisher": "ISO/IEC",
+      "source_url": null,
+      "control_count": 21,
+      "last_verified": null
+    },
+    {
+      "id": "iso-27090",
+      "name": "ISO/IEC 27090",
+      "full_name": "ISO/IEC 27090",
+      "kind": "standard",
+      "publisher": "ISO/IEC",
+      "source_url": null,
+      "control_count": 17,
+      "last_verified": null
+    },
+    {
+      "id": "iso-5181",
+      "name": "ISO/IEC 5181",
+      "full_name": "ISO/IEC 5181",
+      "kind": "standard",
+      "publisher": "ISO/IEC",
+      "source_url": null,
+      "control_count": 13,
+      "last_verified": null
+    },
+    {
+      "id": "iso-31700",
+      "name": "ISO/IEC 31700-1/-2",
+      "full_name": "ISO 31700-1/-2",
+      "kind": "standard",
+      "publisher": "ISO/IEC",
+      "source_url": null,
+      "control_count": 28,
+      "last_verified": null
+    },
+    {
+      "id": "iso-17021-1",
+      "name": "ISO/IEC 17021-1",
+      "full_name": "ISO/IEC 17021-1",
+      "kind": "standard",
+      "publisher": "ISO/IEC",
+      "source_url": null,
+      "control_count": 42,
+      "last_verified": null
+    },
+    {
+      "id": "eu-ai-act",
+      "name": "EU AI Act",
+      "full_name": "EU AI Act (Regulation (EU) 2024/1689)",
+      "kind": "regulation",
+      "publisher": "European Union",
+      "source_url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "control_count": 34,
+      "last_verified": null
+    },
+    {
+      "id": "gdpr",
+      "name": "GDPR",
+      "full_name": "GDPR (Regulation (EU) 2016/679)",
+      "kind": "regulation",
+      "publisher": "European Union",
+      "source_url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "control_count": 39,
+      "last_verified": null
+    },
+    {
+      "id": "dora",
+      "name": "DORA",
+      "full_name": "DORA (Regulation (EU) 2022/2554)",
+      "kind": "regulation",
+      "publisher": "European Union",
+      "source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+      "control_count": 29,
+      "last_verified": null
+    },
+    {
+      "id": "nist-ai-rmf",
+      "name": "NIST AI RMF",
+      "full_name": "NIST AI Risk Management Framework",
+      "kind": "framework",
+      "publisher": "NIST",
+      "source_url": "https://www.nist.gov/itl/ai-risk-management-framework",
+      "control_count": 19,
+      "last_verified": null
+    },
+    {
+      "id": "nist-aria",
+      "name": "NIST ARIA",
+      "full_name": "NIST ARIA (Assessing Risks and Impacts of AI)",
+      "kind": "framework",
+      "publisher": "NIST",
+      "source_url": "https://ai-challenges.nist.gov/aria",
+      "control_count": 14,
+      "last_verified": null
+    },
+    {
+      "id": "oecd-ai",
+      "name": "OECD AI Principles",
+      "full_name": "OECD AI Principles",
+      "kind": "framework",
+      "publisher": "OECD",
+      "source_url": "https://oecd.ai/en/ai-principles",
+      "control_count": 14,
+      "last_verified": null
+    },
+    {
+      "id": "mitre-atlas",
+      "name": "MITRE ATLAS",
+      "full_name": "MITRE ATLAS",
+      "kind": "threat-catalogue",
+      "publisher": "The MITRE Corporation",
+      "source_url": "https://atlas.mitre.org",
+      "control_count": 18,
+      "last_verified": null
+    },
+    {
+      "id": "owasp-llm",
+      "name": "OWASP LLM Top 10",
+      "full_name": "OWASP Top 10 for LLM Applications",
+      "kind": "threat-catalogue",
+      "publisher": "OWASP Foundation",
+      "source_url": "https://genai.owasp.org/llm-top-10/",
+      "control_count": 10,
+      "last_verified": null
+    },
+    {
+      "id": "fair",
+      "name": "FAIR Risk Methodology",
+      "full_name": "FAIR (Factor Analysis of Information Risk)",
+      "kind": "methodology",
+      "publisher": "FAIR Institute / The Open Group",
+      "source_url": "https://www.fairinstitute.org",
+      "control_count": 24,
+      "last_verified": null
+    },
+    {
+      "id": "pbd",
+      "name": "Privacy by Design (Cavoukian)",
+      "full_name": "Privacy by Design (Cavoukian)",
+      "kind": "methodology",
+      "publisher": "A. Cavoukian",
+      "source_url": null,
+      "control_count": 20,
+      "last_verified": null
+    }
+  ]
+}
