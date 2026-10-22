@@ -90,7 +90,7 @@ class Scope:
         raise ScopeError(f"unknown system {system_id!r} (known: {known})")
 
     def add_system(self, system_id: str, name: str, frameworks: Iterable[str],
-                   description: str = "") -> dict:
+                   description: str = "", scoping: Optional[dict] = None) -> dict:
         if any(s["id"] == system_id for s in self.systems()):
             raise ScopeError(f"system {system_id!r} already exists")
         if not system_id or not all(ch.isalnum() or ch in "-_" for ch in system_id):
@@ -106,6 +106,8 @@ class Scope:
         if not fw_ids:
             raise ScopeError("a system needs at least one framework")
         system = {"id": system_id, "name": name, "description": description, "frameworks": fw_ids}
+        if scoping:
+            system["scoping"] = scoping
         self.systems().append(system)
         return system
 

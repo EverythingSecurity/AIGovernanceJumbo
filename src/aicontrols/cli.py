@@ -13,6 +13,7 @@ from . import __version__
 from . import cli_scope
 from .library import Control, Library, load
 from .scope import ScopeError
+from .wizard import WizardError
 
 CSV_FIELDS = ["id", "framework_id", "ref", "title", "domain_id", "section", "c", "i", "a",
               "requirement", "security_note", "evidence"]
@@ -175,7 +176,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.fn(load(), args)
-    except (KeyError, ScopeError) as e:
+    except (KeyError, ScopeError, WizardError) as e:
         print(f"error: {e.args[0]}", file=sys.stderr)
         return 2
     except BrokenPipeError:

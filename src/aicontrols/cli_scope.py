@@ -2,11 +2,15 @@
 """`aicontrols scope ...` commands: record and report an organisation's own decisions."""
 from __future__ import annotations
 
+import datetime
+import json
 import sys
+import textwrap
 from pathlib import Path
 
 from .library import Library
 from .scope import DEFAULT_FILE, DONE, STATUSES, Scope, ScopeError
+from .wizard import LEVEL_TEXT, LEVELS, QUESTIONS, REGULATION_CAVEAT, WizardError, normalize, recommend, selection
 
 PRIVACY_NOTE = ("note: this file describes your real systems and gaps. Keep it in a private "
                 "repository; it is listed in .gitignore here by default.")
@@ -157,6 +161,121 @@ def cmd_validate(lib: Library, a) -> int:
     return 0
 
 
+def _is_tty() -> bool:
+    return sys.stdin.isatty()
+
+
+def _ask(q, index: int, total: int) -> str:
+    letters = {}
+    if len({c[0] for c in q.choices}) == len(q.choices):
+        letters = {c[0]: c for c in q.choices}
+    print(f"\n[{index}/{total}] {q.text}")
+    while True:
+        try:
+            raw = input(f"      {' / '.join(q.choices)} [unsure, ? for help]: ").strip().lower()
+        except EOFError:
+            raise WizardError("input ended before all questions were answered") from None
+        if raw == "?":
+            print(textwrap.fill(q.help or "No extra help for this question.", 90,
+                                initial_indent="      ", subsequent_indent="      "))
+            continue
+        if raw == "":
+            return "unsure"
+        raw = letters.get(raw, raw)
+        if raw in q.choices:
+            return raw
+        print("      please answer one of: " + ", ".join(q.choices))
+
+
+def _confirm(text: str) -> bool:
+    try:
+        return input(f"\n{text} [y/N]: ").strip().lower() in ("y", "yes")
+    except EOFError:
+        return False
+
+
+def _gather(a) -> tuple:
+    """Return (answers, interactive). Non-interactive runs treat unanswered questions as unsure."""
+    raw = {}
+    if a.answers:
+        try:
+            data = json.loads(Path(a.answers).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as e:
+            raise WizardError(f"cannot read answers file {a.answers}: {e}") from None
+        if not isinstance(data, dict):
+            raise WizardError("answers file must be a JSON object of question id -> answer")
+        raw.update(data)
+    for item in a.answer or []:
+        if "=" not in item:
+            raise WizardError(f"--answer expects question=value, got {item!r}")
+        key, value = item.split("=", 1)
+        raw[key.strip()] = value
+    if raw:
+        return raw, False
+    if not _is_tty():
+        raise WizardError("no answers given and input is not interactive; use --answers FILE "
+                          "or --answer question=value")
+    print("Answer a few questions about the AI system. Press Enter for 'unsure'. "
+          "This is a planning aid, not legal advice.")
+    return {q.id: _ask(q, i, len(QUESTIONS)) for i, q in enumerate(QUESTIONS, 1)}, True
+
+
+def _print_recs(recs, name: str) -> None:
+    print(f"\nSuggested frameworks for {name}")
+    print("(planning aid based on your answers, not legal advice)")
+    for level in LEVELS:
+        group = [r for r in recs if r.level == level]
+        if not group:
+            continue
+        print(f"\n{LEVEL_TEXT[level].upper()} ({len(group)})")
+        for r in group:
+            print(f"  {r.name:<30} {r.controls:>4} controls   [{r.kind}]")
+            for reason in r.reasons:
+                print(textwrap.fill(reason, 96, initial_indent="      - ", subsequent_indent="        "))
+    if any(r.caveat for r in recs):
+        print("\n! " + REGULATION_CAVEAT)
+
+
+def cmd_wizard(lib: Library, a) -> int:
+    raw, interactive = _gather(a)
+    answers = normalize(raw)
+    skipped = [q.id for q in QUESTIONS if q.id not in raw]
+    recs = recommend(answers, lib)
+    chosen = selection(recs, a.include)
+
+    if a.json:
+        print(json.dumps({"answers": answers, "selected": chosen,
+                          "recommendations": [r.to_dict() for r in recs]}, indent=2))
+    else:
+        _print_recs(recs, a.name or a.create or "this system")
+        if skipped and not interactive:
+            print(f"\nNot answered (treated as unsure): {', '.join(skipped)}")
+        n_controls = sum(r.controls for r in recs if r.framework_id in chosen)
+        print(f"\nSelected for scope ({a.include}): {', '.join(chosen) or 'none'} "
+              f"- {n_controls} controls")
+
+    create, name = a.create, a.name
+    if not create and interactive and not a.json and _confirm("Create a system in your scope file from these?"):
+        create = input("System id (letters, digits, - or _): ").strip()
+        name = input("Display name: ").strip() or create
+        if a.include == "recommended" and _confirm("Also include the 'worth considering' frameworks?"):
+            a.include = "consider"
+            chosen = selection(recs, "consider")
+    if create:
+        scope = _load(lib, a)
+        scoping = {"date": datetime.date.today().isoformat(), "answers": answers,
+                   "include_level": a.include, "included": chosen,
+                   "note": "Suggested by aicontrols scope wizard; a planning aid, not a legal determination."}
+        system = scope.add_system(create, name or create, chosen, a.description or "", scoping=scoping)
+        scope.save(a.file)
+        print(f"\nadded system {system['id']} with {len(chosen)} frameworks "
+              f"({len(scope.in_scope(create))} controls); the answers are recorded in the scope file")
+    elif not a.json:
+        print("\nTo create the system from these:  aicontrols scope wizard --answers <file> "
+              "--create <system-id> --name \"<name>\"")
+    return 0
+
+
 def add_parser(sub) -> None:
     sp = sub.add_parser("scope", help="record scoping decisions, owners and status for your AI systems")
     ssub = sp.add_subparsers(dest="scope_command", required=True)
@@ -191,6 +310,18 @@ def add_parser(sub) -> None:
     p.add_argument("--notes")
     p.add_argument("--evidence", action="append", help="evidence reference (repeatable; appended)")
     p.set_defaults(fn=cmd_set)
+
+    p = ssub.add_parser("wizard", help="answer questions; get suggested frameworks for a system")
+    common(p, system=False)
+    p.add_argument("--answers", metavar="FILE", help="JSON file of question id -> answer")
+    p.add_argument("--answer", action="append", metavar="Q=VALUE", help="a single answer (repeatable)")
+    p.add_argument("--create", metavar="SYSTEM_ID", help="add a system with the suggested frameworks")
+    p.add_argument("--name", help="display name for the system")
+    p.add_argument("--description")
+    p.add_argument("--include", choices=["recommended", "consider"], default="recommended",
+                   help="which tiers go into scope (default: recommended only)")
+    p.add_argument("--json", action="store_true", help="print machine-readable output")
+    p.set_defaults(fn=cmd_wizard)
 
     p = ssub.add_parser("status", help="completion roll-up"); common(p)
     p.add_argument("--by", choices=["framework", "domain"], default="framework")

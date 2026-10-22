@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0 - 2026-10-22
+
+- **Scoping wizard:** `aicontrols scope wizard` asks 12 plain questions about an AI system and suggests frameworks in four tiers (your answers point to these / worth considering / background / no trigger indicated), with the reason for every suggestion. Interactive, or scripted with `--answers FILE` / `--answer q=v`; `--create` adds the system to your scope file and records the answers that led to it. Regulations are only ever described as indicated by your answers, with a reminder to confirm with counsel.
+- `examples/wizard-answers.json`; the worked example now shows the recorded scoping basis.
+
 ## 0.2.1 - 2026-10-22
 
 - `scope plan --top N` and `--min-frameworks N` to focus on the few workstreams that matter first.

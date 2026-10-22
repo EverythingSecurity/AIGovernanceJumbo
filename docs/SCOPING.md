@@ -13,6 +13,36 @@ A worked example is in [`examples/chatbot-scope.json`](../examples/chatbot-scope
 `aicontrols-scope.json` describes your real systems, owners and gaps. Keep it in a private
 repository. It is in this repo's `.gitignore` so it is not committed here by accident.
 
+## Not sure which frameworks apply? Use the wizard
+
+```bash
+aicontrols scope init --org "Acme Retail"
+aicontrols scope wizard                      # asks 12 questions; Enter = unsure, ? = help
+```
+
+It suggests frameworks in four tiers and shows the answer behind every suggestion:
+
+| Tier | Meaning |
+|---|---|
+| Your answers point to these | A trigger you reported (for example an EU link and personal data for GDPR) |
+| Worth considering | May apply, or is voluntary good practice, or you were unsure |
+| Background reference | Rarely a scoping driver on its own |
+| No trigger indicated | Nothing you said points to it (re-check if you were unsure) |
+
+For a script or a repeatable record, put the answers in a file
+([`examples/wizard-answers.json`](../examples/wizard-answers.json)) and run
+`aicontrols scope wizard --answers answers.json --create support-chatbot --name "Support chatbot"`.
+Only the first tier goes into scope by default; add `--include consider` to take the second
+tier as well. The answers and the choice are stored on the system as its *scoping basis*, so
+a reviewer can see why those frameworks were chosen.
+
+What the wizard is not: it is a transparent set of rules (see
+[`src/aicontrols/wizard.py`](../src/aicontrols/wizard.py)), not a legal determination. It
+never says a law "applies to you", only what your answers indicate. Applicability of the
+EU AI Act, GDPR, DORA and similar laws depends on facts and on the law; confirm with
+qualified counsel. If you answer "unsure", the wizard keeps the framework in view instead of
+ruling it out.
+
 ## The workflow
 
 ```bash

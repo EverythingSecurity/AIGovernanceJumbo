@@ -1,0 +1,14 @@
+{
+  "role": "deployer",
+  "eu": "yes",
+  "personal_data": "yes",
+  "sensitive_use": "no",
+  "genai": "yes",
+  "consumer": "yes",
+  "financial": "no",
+  "certification": "iso42001",
+  "isms": "yes",
+  "trains_own": "no",
+  "adversarial_testing": "yes",
+  "quant_risk": "no"
+}

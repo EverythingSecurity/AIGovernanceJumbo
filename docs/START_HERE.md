@@ -6,6 +6,8 @@ aid, not legal advice: confirm which laws apply to you with qualified counsel.
 
 ## 1. Pick the frameworks that are plausibly relevant
 
+Short on time? `aicontrols scope wizard` asks a few questions and suggests frameworks, showing the reason for each. The table below is the manual version.
+
 | If you... | Look at | Why |
 |---|---|---|
 | Sell to or operate in the EU, or your AI affects people in the EU | `eu-ai-act`, `gdpr` | Binding law. The AI Act's obligations depend on your role and the system's risk class. |

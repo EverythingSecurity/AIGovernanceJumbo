@@ -34,7 +34,7 @@ lib.search("data poisoning")[0].title
 lib.related("gdpr:Art.33")
 ```
 
-**Scope your own work:** `aicontrols scope` records your AI systems, which controls apply, owners and status, and exports a Statement-of-Applicability style CSV. See [docs/SCOPING.md](docs/SCOPING.md).
+**Scope your own work:** `aicontrols scope wizard` suggests which frameworks fit an AI system from a few plain questions, and `aicontrols scope` records your AI systems, which controls apply, owners and status, and exports a Statement-of-Applicability style CSV. See [docs/SCOPING.md](docs/SCOPING.md).
 
 **Web explorer:** `python -m http.server` in the repo root, then open
 <http://localhost:8000/site/>. It is deployed to GitHub Pages by
