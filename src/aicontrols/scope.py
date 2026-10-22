@@ -212,17 +212,25 @@ class Scope:
     def overall(self, system_id: Optional[str]) -> dict:
         return self._tally(self.rows(system_id))
 
-    def plan(self, system_id: Optional[str]) -> List[dict]:
-        """Workstreams: one per domain, biggest and most-shared first."""
+    def plan(self, system_id: Optional[str], today: Optional[str] = None) -> List[dict]:
+        """Workstreams: one per domain, most-shared and biggest first.
+
+        `next_due` is the earliest due date among applicable, not-yet-done controls;
+        `overdue` counts those whose due date has passed.
+        """
+        today = today or _today()
         groups: Dict[str, List[Tuple[Control, dict]]] = {}
         for c, d in self.rows(system_id):
             groups.setdefault(c.domain_id, []).append((c, d))
         out = []
         for did, items in groups.items():
             owners = sorted({d["owner"] for _c, d in items if d["owner"]})
+            dues = sorted(d["due"] for _c, d in items
+                          if d["applicable"] and d["status"] not in DONE and d["due"])
             out.append({"domain_id": did, "domain": self.lib.domains[did].name,
                         "frameworks": len({c.framework_id for c, _d in items}),
-                        "owners": owners, **self._tally(items)})
+                        "owners": owners, "next_due": dues[0] if dues else None,
+                        "overdue": sum(1 for x in dues if x < today), **self._tally(items)})
         return sorted(out, key=lambda r: (-r["frameworks"], -r["total"], r["domain"]))
 
     def related_open(self, system_id: Optional[str], control: Control) -> List[Control]:
@@ -260,6 +268,44 @@ class Scope:
         w.writeheader()
         w.writerows(rows)
         return len(rows)
+
+    # ---- markdown ----------------------------------------------------------
+    @staticmethod
+    def _md(value) -> str:
+        """Make a value safe for a Markdown table cell."""
+        return str(value if value is not None else "").replace("|", "\\|").replace("\n", " ").strip()
+
+    def plan_markdown(self, system_id: Optional[str], rows: List[dict], total: int) -> str:
+        system = self.system(system_id)
+        lines = [f"# Governance plan: {self._md(system['name'])}", "",
+                 f"Organisation: {self._md(self.data['organization'])}  ",
+                 f"Frameworks: {', '.join(self.lib.frameworks[f].name for f in system['frameworks'])}  ",
+                 f"Workstreams shown: {len(rows)} of {total} (one per domain, most-shared first)", "",
+                 "| Workstream (domain) | Frameworks | Controls | Done | Next due | Overdue | Owner |",
+                 "|---|---:|---:|---:|---|---:|---|"]
+        for p in rows:
+            done = "n/a" if p["percent"] is None else f"{p['percent']}%"
+            lines.append(f"| {self._md(p['domain'])} | {p['frameworks']} | {p['total']} | {done} | "
+                         f"{p['next_due'] or ''} | {p['overdue'] or ''} | "
+                         f"{self._md(', '.join(p['owners']) or '-')} |")
+        lines += ["", "_Done = implemented + verified, as a share of applicable controls. "
+                      "Planning aid, not a compliance verdict._", ""]
+        return "\n".join(lines)
+
+    def soa_markdown(self, system_id: Optional[str]) -> str:
+        system = self.system(system_id)
+        lines = [f"# Statement of applicability (draft): {self._md(system['name'])}", "",
+                 f"Organisation: {self._md(self.data['organization'])}", "",
+                 "| Control | Title | Domain | CIA | Applicable | Status | Owner | Due | Evidence | Justification / notes |",
+                 "|---|---|---|---|---|---|---|---|---|---|"]
+        for r in self.soa_rows(system_id):
+            cia = ("C" if r["c"] else "-") + ("I" if r["i"] else "-") + ("A" if r["a"] else "-")
+            note = "; ".join(x for x in (r["justification"], r["notes"]) if x)
+            lines.append("| " + " | ".join(self._md(x) for x in (
+                r["control_id"], r["title"], r["domain"], cia, r["applicable"], r["status"],
+                r["owner"], r["due"], r["evidence"], note)) + " |")
+        lines += ["", "_Draft for review and approval; not a compliance verdict._", ""]
+        return "\n".join(lines)
 
     # ---- validation ------------------------------------------------------
     def validate(self) -> Tuple[List[str], List[str]]:

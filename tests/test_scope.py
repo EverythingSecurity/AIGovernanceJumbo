@@ -209,3 +209,54 @@ def test_cli_requires_system_when_ambiguous(capsys, tmp_path):
     run(capsys, "scope", "add-system", "b", "--frameworks", "gdpr", "--file", f)
     code, _, err = run(capsys, "scope", "status", "--file", f)
     assert code == 2 and "choose one" in err
+
+
+# ---- plan priorities, due dates and Markdown ------------------------------
+def test_plan_reports_next_due_and_overdue_for_open_controls_only(scope):
+    chosen = scope.select("bot", domain="incident")
+    scope.set("bot", chosen, due="2026-01-10")
+    scope.set("bot", chosen[:1], status="implemented")  # done: no longer counts as open
+    row = next(p for p in scope.plan("bot", today="2026-06-01") if p["domain_id"].startswith("incident"))
+    assert row["next_due"] == "2026-01-10"
+    assert row["overdue"] == len(chosen) - 1
+    row = next(p for p in scope.plan("bot", today="2025-12-01") if p["domain_id"].startswith("incident"))
+    assert row["overdue"] == 0
+
+
+def test_not_applicable_controls_do_not_create_overdue_items(scope):
+    c = scope.select("bot", ["gdpr:Art.33"])
+    scope.set("bot", c, due="2026-01-01", applicable=False, justification="n/a")
+    row = next(p for p in scope.plan("bot", today="2026-06-01") if p["domain_id"].startswith("incident"))
+    assert row["overdue"] == 0
+
+
+def test_markdown_cells_are_escaped(scope):
+    c = scope.select("bot", ["gdpr:Art.33"])
+    scope.set("bot", c, notes="a | b\nsecond line", owner="Ops|Sec")
+    md = scope.soa_markdown("bot")
+    line = next(x for x in md.splitlines() if x.startswith("| gdpr:Art.33"))
+    assert "a \\| b second line" in line and "Ops\\|Sec" in line
+    assert line.count("|") - line.count("\\|") == 11  # 10 columns -> 11 separators
+
+
+def test_plan_markdown_header_and_rows(scope):
+    rows = scope.plan("bot")[:2]
+    md = scope.plan_markdown("bot", rows, total=len(scope.plan("bot")))
+    assert md.startswith("# Governance plan: Bot") and "Workstreams shown: 2 of" in md
+    assert md.count("\n| ") >= 3
+
+
+def test_cli_plan_top_min_frameworks_and_markdown(capsys, tmp_path):
+    f = str(tmp_path / "scope.json")
+    run(capsys, "scope", "init", "--org", "T", "--file", f)
+    run(capsys, "scope", "add-system", "bot", "--frameworks", "gdpr,iso-27001,eu-ai-act", "--file", f)
+    code, out, _ = run(capsys, "scope", "plan", "--top", "3", "--file", f)
+    assert code == 0 and "showing 3 of" in out
+    code, out, _ = run(capsys, "scope", "plan", "--min-frameworks", "3", "--file", f)
+    rows = [ln for ln in out.splitlines() if ln and ln[46:50].strip() == "3"]
+    assert code == 0 and rows
+    target = tmp_path / "plan.md"
+    code, _, _ = run(capsys, "scope", "plan", "--top", "2", "--format", "md", "-o", str(target), "--file", f)
+    assert code == 0 and target.read_text().startswith("# Governance plan")
+    code, out, _ = run(capsys, "scope", "export", "--format", "md", "--file", f)
+    assert code == 0 and out.startswith("# Statement of applicability")

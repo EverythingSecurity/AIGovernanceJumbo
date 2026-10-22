@@ -34,8 +34,10 @@ aicontrols scope set iso-27001:A.5.24 --status implemented --evidence "IR plan v
 
 # 5. see where you stand
 aicontrols scope plan        # workstreams (domains), most-shared first
+aicontrols scope plan --top 5 --min-frameworks 3     # a first-meeting view
+aicontrols scope plan --top 5 --format md -o plan.md # Markdown for a document
 aicontrols scope status      # completion by framework (or --by domain)
-aicontrols scope export -o soa.csv
+aicontrols scope export -o soa.csv                   # CSV (add --format md for Markdown)
 aicontrols scope validate
 ```
 
@@ -52,7 +54,9 @@ scope file elsewhere.
 - **Statuses:** `not_started`, `in_progress`, `implemented`, `verified`. *Completion* is
   implemented plus verified, as a share of applicable controls.
 - **Workstreams are domains.** One owner per domain usually means one task satisfying
-  several frameworks. `scope plan` lists the most-shared domains first.
+  several frameworks. `scope plan` lists the most-shared domains first, with each
+  workstream's next due date and the number of open controls past due. Use `--top` and
+  `--min-frameworks` to show only the few that matter for a first steering meeting.
 - **No automatic inheritance.** When you mark a control done, the tool lists other in-scope
   controls in the same domain that are still open, so you can check whether the same work
   satisfies them. It never updates them for you, because the cross-framework link is a

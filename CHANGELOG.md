@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 - 2026-10-22
+
+- `scope plan --top N` and `--min-frameworks N` to focus on the few workstreams that matter first.
+- `scope plan` now shows each workstream's next due date and how many open controls are overdue.
+- Markdown output: `scope plan --format md` and `scope export --format md` for pasting into documents.
+
 ## 0.2.0 - 2026-10-22
 
 - **Domain corrections:** 137 of 557 controls moved to a more appropriate domain via `tools/domain_overrides.json` (applied at build time, with a reason per group). Fixes, for example, ISO 42001 6.1.2 and 6.1.3 (risk), ISO 27090 and MITRE ATLAS items filed under HR, and GDPR/EU AI Act definitions and penalties filed under incident management.

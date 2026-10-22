@@ -94,21 +94,45 @@ def cmd_status(lib: Library, a) -> int:
 def cmd_plan(lib: Library, a) -> int:
     scope = _load(lib, a)
     system = scope.system(a.system)
-    plan = scope.plan(a.system)
-    print(f"{scope.data['organization']} / {system['name']}: {len(plan)} workstreams "
-          f"(domains), most-shared first\n")
-    print(f"{'domain':<50} {'fw':>3} {'ctrls':>5} {'done%':>7}  owners")
+    every = scope.plan(a.system)
+    plan = [p for p in every if p["frameworks"] >= a.min_frameworks]
+    if a.top:
+        plan = plan[:a.top]
+    if a.format == "md":
+        text = scope.plan_markdown(a.system, plan, len(every))
+        if a.output:
+            Path(a.output).write_text(text, encoding="utf-8")
+            print(f"-- wrote {a.output}", file=sys.stderr)
+        else:
+            print(text)
+        return 0
+    shown = f"showing {len(plan)} of {len(every)}" if len(plan) != len(every) else f"{len(every)}"
+    print(f"{scope.data['organization']} / {system['name']}: {shown} workstreams "
+          "(domains), most-shared first\n")
+    print(f"{'domain':<46} {'fw':>3} {'ctrls':>5} {'done%':>7} {'next due':>10} {'late':>4}  owners")
     for p in plan:
         owners = ", ".join(p["owners"]) or "-"
-        print(f"{p['domain'][:50]:<50} {p['frameworks']:>3} {p['total']:>5} {_pct(p):>7}  {owners}")
+        print(f"{p['domain'][:46]:<46} {p['frameworks']:>3} {p['total']:>5} {_pct(p):>7} "
+              f"{(p['next_due'] or '-'):>10} {(p['overdue'] or ''):>4}  {owners}")
     unowned = sum(1 for p in plan if not p["owners"])
-    print(f"\n{unowned} workstream(s) have no owner assigned. Assign with: "
+    late = sum(p["overdue"] for p in plan)
+    if late:
+        print(f"\n{late} open control(s) are past their due date.")
+    print(f"{unowned} of the workstreams shown have no owner. Assign with: "
           "aicontrols scope set --domain <domain> --owner <name>")
     return 0
 
 
 def cmd_export(lib: Library, a) -> int:
     scope = _load(lib, a)
+    if a.format == "md":
+        text = scope.soa_markdown(a.system)
+        if a.output:
+            Path(a.output).write_text(text, encoding="utf-8")
+        else:
+            print(text)
+        print(f"-- exported {len(scope.rows(a.system))} rows", file=sys.stderr)
+        return 0
     out = open(a.output, "w", encoding="utf-8", newline="") if a.output else sys.stdout
     try:
         n = scope.write_soa(a.system, out)
@@ -173,9 +197,15 @@ def add_parser(sub) -> None:
     p.set_defaults(fn=cmd_status)
 
     p = ssub.add_parser("plan", help="workstreams by domain, most-shared first"); common(p)
+    p.add_argument("--top", type=int, metavar="N", help="show only the first N workstreams")
+    p.add_argument("--min-frameworks", type=int, default=1, metavar="N",
+                   help="only domains touched by at least N of the system's frameworks")
+    p.add_argument("--format", choices=["text", "md"], default="text")
+    p.add_argument("-o", "--output", help="write Markdown to this file (with --format md)")
     p.set_defaults(fn=cmd_plan)
 
-    p = ssub.add_parser("export", help="Statement-of-Applicability style CSV"); common(p)
+    p = ssub.add_parser("export", help="Statement-of-Applicability style CSV or Markdown"); common(p)
+    p.add_argument("--format", choices=["csv", "md"], default="csv")
     p.add_argument("-o", "--output")
     p.set_defaults(fn=cmd_export)
 
