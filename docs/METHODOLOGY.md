@@ -32,10 +32,13 @@ build restores the prefix, so Annex A is `iso-27001:A.5.1` and the clause is `is
 
 ## Known limits
 
-- **Domain assignment is judgement and may contain mistakes.** For example, ISO 42001
-  6.1.2 (AI risk assessment) is filed under *Documentation, Records & Configuration
-  Control* rather than *Risk Assessment & Treatment*, and 6.1.3 (AI risk treatment) under
-  *Legal, Regulatory & Compliance Obligations*. Please open an issue when you find others.
+- **Domain assignment is judgement, and the workbook's original assignments contained many
+  errors.** For example, ISO 42001 6.1.2 (AI risk assessment) was filed under
+  *Documentation*, ISO 27090 items under *Human Resources*, and GDPR "Definitions" under
+  *Incident Management*. Version 0.2.0 corrects 137 of the 557 assignments through
+  [`tools/domain_overrides.json`](../tools/domain_overrides.json), applied by the build, with
+  a reason per group. The source workbook files are left as they were. The corrections are
+  themselves judgement calls: dispute any of them with an issue, and expect more to be found.
 - **Draft or evolving standards.** Some referenced standards were still in development
   when the workbook was written. `last_verified` in `data/frameworks.json` is `null`
   until a maintainer has checked a framework against its current published text.

@@ -81,3 +81,29 @@ def test_to_dict_round_trips_core_fields(lib):
 
 def test_search_folds_plurals(lib):
     assert {c.id for c in lib.search("incident", limit=50)} == {c.id for c in lib.search("incidents", limit=50)}
+
+
+def test_domain_corrections_are_applied(lib):
+    # Regressions for assignments the original workbook got wrong.
+    assert lib.get("iso-42001:6.1.2").domain_id == "risk-assessment-treatment"
+    assert lib.get("iso-42001:6.1.3").domain_id == "risk-assessment-treatment"
+    assert lib.get("eu-ai-act:Art.99").domain_id == "legal-regulatory-compliance-obligations"
+    assert lib.get("eu-ai-act:Art.3").domain_id.startswith("framework-specific")
+    assert lib.get("mitre-atlas:TA-06").domain_id == "mitre-atlas-tactics-adversary-attack-lifecycle"
+    assert lib.get("fair:S1.1").domain_id == "risk-quantification-fair"
+    incident = {lib.get(i).framework_id for i in lib.domains["incident-management-breach-notification"].control_ids}
+    assert "iso-17021-1" not in incident
+
+
+def test_override_file_is_consistent_with_the_dataset(lib):
+    import json
+    from pathlib import Path
+    path = Path(__file__).resolve().parent.parent / "tools" / "domain_overrides.json"
+    seen = set()
+    for group in json.loads(path.read_text(encoding="utf-8"))["corrections"]:
+        assert group["reason"].strip()
+        assert group["domain"] in lib.domains
+        for cid in group["controls"]:
+            assert cid not in seen, f"{cid} listed twice"
+            seen.add(cid)
+            assert lib.get(cid).domain_id == group["domain"]

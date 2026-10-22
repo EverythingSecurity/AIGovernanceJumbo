@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 - 2026-10-22
+
+- **Domain corrections:** 137 of 557 controls moved to a more appropriate domain via `tools/domain_overrides.json` (applied at build time, with a reason per group). Fixes, for example, ISO 42001 6.1.2 and 6.1.3 (risk), ISO 27090 and MITRE ATLAS items filed under HR, and GDPR/EU AI Act definitions and penalties filed under incident management.
+
+- Scope layer: `aicontrols scope` records your own systems, per-system framework choices, applicability decisions (with justification), owners, status and evidence in a private `aicontrols-scope.json`; reports completion by framework, plans workstreams by domain, and exports a Statement-of-Applicability style CSV.
+- `schema/scope.schema.json` and a worked example in `examples/`.
+
 ## 0.1.0 - 2026-10-21
 
 - First public release: 557 controls across 18 frameworks and 32 cross-framework domains.

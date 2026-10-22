@@ -19,6 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "AI_Governance_Master_Checklist.json"
 OUT = ROOT / "data"
+OVERRIDES = ROOT / "tools" / "domain_overrides.json"
 
 # id, name as used in the workbook's Master Control List, registry metadata
 FRAMEWORKS = [
@@ -116,6 +117,19 @@ def section_label(raw):
     return clean(raw)
 
 
+def load_overrides():
+    """control id -> domain id, from tools/domain_overrides.json (empty if absent)."""
+    if not OVERRIDES.is_file():
+        return {}
+    mapping = {}
+    for group in json.loads(OVERRIDES.read_text(encoding="utf-8"))["corrections"]:
+        for cid in group["controls"]:
+            if cid in mapping:
+                raise SystemExit(f"{cid} appears twice in {OVERRIDES.name}")
+            mapping[cid] = group["domain"]
+    return mapping
+
+
 def build():
     src = json.loads(SOURCE.read_text(encoding="utf-8"))
     meta = src["_meta"]
@@ -199,6 +213,16 @@ def build():
     controls.sort(key=lambda t: (t[0], t[1]))
     controls = [rec for *_k, rec in controls]
 
+    overrides = load_overrides()
+    known_domains = {slug(n) for n in domain_names}
+    by_id = {c["id"]: c for c in controls}
+    for cid, did in overrides.items():
+        if cid not in by_id:
+            raise SystemExit(f"{OVERRIDES.name}: unknown control id {cid}")
+        if did not in known_domains:
+            raise SystemExit(f"{OVERRIDES.name}: unknown domain id {did}")
+        by_id[cid]["domain_id"] = did
+
     cross = {x["domain"]: x for x in src["13 Domain Crosswalk"]["domains"]}
     domains = []
     for name in domain_names:
@@ -236,7 +260,8 @@ def build():
         (OUT / f"{name}.json").write_text(
             json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-    print(f"controls={len(controls)} frameworks={len(frameworks)} domains={len(domains)}")
+    print(f"controls={len(controls)} frameworks={len(frameworks)} domains={len(domains)} "
+          f"domain_overrides={len(overrides)}")
     if unmatched:
         print(f"WARNING: {len(unmatched)} master rows had no framework-sheet match:")
         for k in unmatched:

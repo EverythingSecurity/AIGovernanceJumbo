@@ -1,0 +1,265 @@
+{
+  "schema_version": "1.0",
+  "dataset_version": "0.2.0",
+  "organization": "Acme Retail (fictional example)",
+  "created": "2026-10-22",
+  "systems": [
+    {
+      "id": "support-chatbot",
+      "name": "Customer support chatbot",
+      "description": "LLM assistant answering customer questions; uses a third-party hosted model and customer order data.",
+      "frameworks": [
+        "iso-42001",
+        "iso-27001",
+        "eu-ai-act",
+        "gdpr",
+        "owasp-llm"
+      ]
+    }
+  ],
+  "decisions": {
+    "support-chatbot": {
+      "eu-ai-act:Art.53": {
+        "justification": "We deploy a third-party general-purpose model and do not provide one; supplier obligations are tracked under the supplier review.",
+        "applicable": false,
+        "updated": "2026-10-22"
+      },
+      "eu-ai-act:Art.55": {
+        "justification": "We deploy a third-party general-purpose model and do not provide one; supplier obligations are tracked under the supplier review.",
+        "applicable": false,
+        "updated": "2026-10-22"
+      },
+      "iso-42001:4.1": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:4.2": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:4.4": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:5.1": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:5.2": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:6.2": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:6.3": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:7.1": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:7.4": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:8.1": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:A.2.2": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:A.2.3": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:A.2.4": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:A.8.3": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:A.8.5": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:A.9.3": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:4.1": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:4.2": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:4.4": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:5.1": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:5.2": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:6.2": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:6.3": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:7.1": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:7.4": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:8.1": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:A.5.1": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:A.5.5": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:A.5.6": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "eu-ai-act:Art.17": {
+        "owner": "GRC Manager",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:A.8.4": {
+        "owner": "Head of Security Operations",
+        "due": "2026-12-31",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:A.5.24": {
+        "owner": "Head of Security Operations",
+        "due": "2026-12-31",
+        "updated": "2026-10-22",
+        "status": "implemented",
+        "reviewed": "2026-10-15",
+        "evidence": [
+          "Incident response plan v3 (wiki)"
+        ]
+      },
+      "iso-27001:A.5.25": {
+        "owner": "Head of Security Operations",
+        "due": "2026-12-31",
+        "updated": "2026-10-22",
+        "status": "implemented",
+        "reviewed": "2026-10-15",
+        "evidence": [
+          "Incident response plan v3 (wiki)"
+        ]
+      },
+      "iso-27001:A.5.26": {
+        "owner": "Head of Security Operations",
+        "due": "2026-12-31",
+        "updated": "2026-10-22",
+        "status": "implemented",
+        "reviewed": "2026-10-15",
+        "evidence": [
+          "Incident response plan v3 (wiki)"
+        ]
+      },
+      "iso-27001:A.5.27": {
+        "owner": "Head of Security Operations",
+        "due": "2026-12-31",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:A.5.28": {
+        "owner": "Head of Security Operations",
+        "due": "2026-12-31",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:A.6.8": {
+        "owner": "Head of Security Operations",
+        "due": "2026-12-31",
+        "updated": "2026-10-22"
+      },
+      "eu-ai-act:Art.73": {
+        "owner": "Head of Security Operations",
+        "due": "2026-12-31",
+        "updated": "2026-10-22"
+      },
+      "gdpr:Art.33": {
+        "owner": "Head of Security Operations",
+        "due": "2026-12-31",
+        "updated": "2026-10-22",
+        "status": "in_progress",
+        "notes": "72-hour notification workflow drafted; needs legal sign-off."
+      },
+      "iso-42001:A.10.2": {
+        "owner": "Procurement Lead",
+        "updated": "2026-10-22"
+      },
+      "iso-42001:A.10.3": {
+        "owner": "Procurement Lead",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:A.5.19": {
+        "owner": "Procurement Lead",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:A.5.20": {
+        "owner": "Procurement Lead",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:A.5.21": {
+        "owner": "Procurement Lead",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:A.5.22": {
+        "owner": "Procurement Lead",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:A.5.23": {
+        "owner": "Procurement Lead",
+        "updated": "2026-10-22"
+      },
+      "iso-27001:A.8.30": {
+        "owner": "Procurement Lead",
+        "updated": "2026-10-22"
+      },
+      "eu-ai-act:Art.25": {
+        "owner": "Procurement Lead",
+        "updated": "2026-10-22"
+      },
+      "gdpr:Art.28": {
+        "owner": "Procurement Lead",
+        "updated": "2026-10-22"
+      },
+      "owasp-llm:LLM03:2025": {
+        "owner": "Procurement Lead",
+        "updated": "2026-10-22"
+      },
+      "owasp-llm:LLM01:2025": {
+        "status": "in_progress",
+        "owner": "AI Security Engineer",
+        "updated": "2026-10-22"
+      }
+    }
+  }
+}

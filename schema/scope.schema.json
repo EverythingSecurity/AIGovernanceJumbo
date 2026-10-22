@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/EverythingSecurity/AIGovernanceJumbo/main/schema/scope.schema.json",
+  "title": "AI Controls Framework - scope file",
+  "description": "An organisation's scoping decisions (aicontrols-scope.json). Keep this file private. SPDX-License-Identifier: Apache-2.0",
+  "type": "object",
+  "required": ["schema_version", "dataset_version", "organization", "systems", "decisions"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "dataset_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "organization": {"type": "string"},
+    "created": {"$ref": "#/$defs/date"},
+    "systems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "frameworks"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "frameworks": {"type": "array", "minItems": 1, "uniqueItems": true,
+                         "items": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"}}
+        }
+      }
+    },
+    "decisions": {
+      "type": "object",
+      "description": "system id -> control id -> decision. Only explicit decisions are stored; anything absent is applicable and not_started.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {"$ref": "#/$defs/decision"}
+      }
+    }
+  },
+  "$defs": {
+    "date": {"type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "applicable": {"type": "boolean"},
+        "justification": {"type": "string"},
+        "owner": {"type": ["string", "null"]},
+        "status": {"enum": ["not_started", "in_progress", "implemented", "verified"]},
+        "due": {"$ref": "#/$defs/date"},
+        "reviewed": {"$ref": "#/$defs/date"},
+        "updated": {"$ref": "#/$defs/date"},
+        "evidence": {"type": "array", "items": {"type": "string"}},
+        "notes": {"type": "string"}
+      },
+      "if": {"properties": {"applicable": {"const": false}}, "required": ["applicable"]},
+      "then": {"required": ["justification"], "properties": {"justification": {"minLength": 1}}}
+    }
+  }
+}

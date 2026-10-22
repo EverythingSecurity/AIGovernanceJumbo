@@ -10,7 +10,9 @@ import textwrap
 from typing import List, Optional
 
 from . import __version__
+from . import cli_scope
 from .library import Control, Library, load
+from .scope import ScopeError
 
 CSV_FIELDS = ["id", "framework_id", "ref", "title", "domain_id", "section", "c", "i", "a",
               "requirement", "security_note", "evidence"]
@@ -164,6 +166,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--format", choices=["csv", "json"], default="csv")
     sp.add_argument("-o", "--output", help="file to write (default: stdout)")
     sp.set_defaults(fn=cmd_export)
+
+    cli_scope.add_parser(sub)
     return p
 
 
@@ -171,7 +175,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.fn(load(), args)
-    except KeyError as e:
+    except (KeyError, ScopeError) as e:
         print(f"error: {e.args[0]}", file=sys.stderr)
         return 2
     except BrokenPipeError:

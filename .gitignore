@@ -8,3 +8,4 @@ build/
 _site/
 .DS_Store
 *.csv
+aicontrols-scope.json

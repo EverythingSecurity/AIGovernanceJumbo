@@ -1,0 +1,316 @@
+{
+  "_comment": "Corrections to the workbook's domain assignments, applied by tools/build_data.py. Each group moves its controls to the named domain id. Judgement calls: review and dispute via an issue.",
+  "corrections": [
+    {
+      "domain": "risk-assessment-treatment",
+      "reason": "A risk assessment or risk treatment requirement was filed under documentation, legal, or privacy-rights domains.",
+      "controls": [
+        "iso-42001:6.1.2",
+        "iso-27001:6.1.2",
+        "iso-42001:6.1.3",
+        "iso-27701:5.4",
+        "iso-31700:6.2",
+        "nist-ai-rmf:Manage-4"
+      ]
+    },
+    {
+      "domain": "ai-system-classification-scope-categorization",
+      "reason": "Scope and context of the management system belong with classification and scoping.",
+      "controls": [
+        "iso-42001:4.3",
+        "nist-ai-rmf:Map-1"
+      ]
+    },
+    {
+      "domain": "governance-policy-leadership",
+      "reason": "Context, policy, planning and management-system plumbing belong with governance.",
+      "controls": [
+        "iso-42001:4.1",
+        "iso-27001:4.1",
+        "iso-27001:4.4",
+        "iso-42001:5.2",
+        "iso-27001:5.2",
+        "iso-42001:8.1",
+        "iso-27001:8.1",
+        "nist-ai-rmf:Govern-1",
+        "eu-ai-act:Art.17"
+      ]
+    },
+    {
+      "domain": "roles-responsibilities-accountability",
+      "reason": "Roles, responsibilities, accountability and role-based obligations.",
+      "controls": [
+        "iso-42001:5.3",
+        "iso-27001:5.3",
+        "eu-ai-act:Art.16",
+        "eu-ai-act:Art.22",
+        "eu-ai-act:Art.23",
+        "eu-ai-act:Art.24",
+        "eu-ai-act:Art.26",
+        "gdpr:Art.37",
+        "gdpr:Art.38",
+        "nist-ai-rmf:Govern-2",
+        "oecd-ai:1.5",
+        "iso-31700:4.6"
+      ]
+    },
+    {
+      "domain": "documentation-records-configuration-control",
+      "reason": "Documented information and technical documentation.",
+      "controls": [
+        "iso-42001:7.5.1",
+        "iso-27001:7.5.1",
+        "iso-27001:7.5.2",
+        "iso-42001:A.6.2.3",
+        "eu-ai-act:Annex-IV",
+        "iso-42005:6.1"
+      ]
+    },
+    {
+      "domain": "asset-inventory-information-classification",
+      "reason": "Asset handling.",
+      "controls": [
+        "iso-27001:A.5.11",
+        "dora:Art.8"
+      ]
+    },
+    {
+      "domain": "internal-audit-management-review-certification",
+      "reason": "Internal audit, management review, and audit-related items.",
+      "controls": [
+        "iso-42001:9.2.1",
+        "iso-27001:9.2.1",
+        "iso-27001:9.3.3",
+        "iso-42001:9.3.2",
+        "iso-27001:9.3.2",
+        "iso-17021-1:9.3",
+        "iso-17021-1:9.4",
+        "iso-17021-1:8.2",
+        "iso-27001:A.5.36",
+        "iso-27001:A.8.34"
+      ]
+    },
+    {
+      "domain": "incident-management-breach-notification",
+      "reason": "Evidence collection supports incident handling.",
+      "controls": [
+        "iso-27001:A.5.28"
+      ]
+    },
+    {
+      "domain": "privacy-specific-controls-collection-minimisation-transfer",
+      "reason": "Lawfulness, minimisation, consent and processing conditions.",
+      "controls": [
+        "iso-27701:7.2",
+        "iso-27701:Annex-B",
+        "gdpr:Art.5(1)",
+        "pbd:2.1",
+        "pbd:2.2",
+        "pbd:2.3"
+      ]
+    },
+    {
+      "domain": "data-subject-individual-rights-transparency",
+      "reason": "Transparency, information and rights of individuals.",
+      "controls": [
+        "iso-31700:5.2",
+        "iso-31700:5.4",
+        "iso-31700:5.5",
+        "pbd:7.3"
+      ]
+    },
+    {
+      "domain": "legal-regulatory-compliance-obligations",
+      "reason": "Penalties, liability, and cooperation with authorities.",
+      "controls": [
+        "gdpr:Art.82",
+        "eu-ai-act:Art.99",
+        "dora:Art.42",
+        "eu-ai-act:Art.21"
+      ]
+    },
+    {
+      "domain": "framework-specific-no-direct-cross-framework-equivalent",
+      "reason": "Scope, definitions and framework-specific items with no cross-framework equivalent.",
+      "controls": [
+        "gdpr:Art.2-3",
+        "gdpr:Art.4",
+        "eu-ai-act:Art.3",
+        "nist-aria:D.2",
+        "iso-27701:Annex-C-E",
+        "iso-17021-1:4.1",
+        "iso-17021-1:4.8",
+        "iso-17021-1:8.3",
+        "iso-17021-1:8.5",
+        "oecd-ai:2.5",
+        "oecd-ai:2.4",
+        "oecd-ai:3.1",
+        "oecd-ai:3.2",
+        "oecd-ai:2.3"
+      ]
+    },
+    {
+      "domain": "human-resources-security-awareness",
+      "reason": "Competence, training and people controls.",
+      "controls": [
+        "iso-31700:4.7",
+        "iso-31700:4.8",
+        "iso-27001:A.6.5",
+        "iso-42001:A.4.6",
+        "iso-17021-1:7.1"
+      ]
+    },
+    {
+      "domain": "ai-system-societal-impact-assessment",
+      "reason": "Impact categories.",
+      "controls": [
+        "iso-42005:Annex-C-D"
+      ]
+    },
+    {
+      "domain": "data-provenance-lineage",
+      "reason": "Provenance and lineage.",
+      "controls": [
+        "iso-5181:T.6",
+        "iso-5181:AI.1",
+        "iso-5181:AI.2",
+        "iso-5181:AI.3",
+        "iso-5181:AI.4"
+      ]
+    },
+    {
+      "domain": "data-governance-quality-provenance-ai-ml-data",
+      "reason": "Data for AI development.",
+      "controls": [
+        "iso-42001:A.7.2"
+      ]
+    },
+    {
+      "domain": "genai-llm-attack-surface-owasp",
+      "reason": "LLM application attack surface.",
+      "controls": [
+        "owasp-llm:LLM02:2025"
+      ]
+    },
+    {
+      "domain": "third-party-supplier-ai-supply-chain",
+      "reason": "Supplier and supply-chain items.",
+      "controls": [
+        "owasp-llm:LLM03:2025",
+        "dora:Art.30",
+        "iso-27001:A.5.22",
+        "iso-27001:A.5.23",
+        "pbd:5.3"
+      ]
+    },
+    {
+      "domain": "iso-27090-owasp-ai-threat-catalogue-poisoning-evasion-extraction-injection",
+      "reason": "AI threat catalogue (ISO/IEC 27090).",
+      "controls": [
+        "iso-27090:7.2",
+        "iso-27090:Annex-B",
+        "iso-27090:5.1",
+        "iso-27090:5.2",
+        "iso-27090:6.8",
+        "iso-27090:7.1",
+        "iso-27090:Annex-C",
+        "iso-27090:Annex-A"
+      ]
+    },
+    {
+      "domain": "mitre-atlas-tactics-adversary-attack-lifecycle",
+      "reason": "MITRE ATLAS tactics and framework identification.",
+      "controls": [
+        "mitre-atlas:TA-05",
+        "mitre-atlas:TA-06",
+        "mitre-atlas:ID",
+        "mitre-atlas:Use"
+      ]
+    },
+    {
+      "domain": "risk-quantification-fair",
+      "reason": "FAIR methodology items.",
+      "controls": [
+        "fair:S1.1",
+        "fair:S1.2",
+        "fair:S3.1",
+        "fair:G.3",
+        "fair:G.4",
+        "fair:G.6"
+      ]
+    },
+    {
+      "domain": "privacy-by-design-principles-proactive-default-embedded-lifecycle",
+      "reason": "Privacy-by-design principles and design practices.",
+      "controls": [
+        "iso-31700:7.2",
+        "iso-31700:7.3",
+        "iso-31700:7.4",
+        "iso-31700:7.5",
+        "iso-31700:7.6",
+        "iso-31700:8.2",
+        "pbd:1.1",
+        "pbd:3.1",
+        "pbd:4.1",
+        "pbd:4.2"
+      ]
+    },
+    {
+      "domain": "operational-resilience-ict-third-party-risk-dora",
+      "reason": "DORA operational resilience testing.",
+      "controls": [
+        "dora:Art.24"
+      ]
+    },
+    {
+      "domain": "logging-monitoring-detection",
+      "reason": "Threat intelligence and detection sharing.",
+      "controls": [
+        "iso-27001:A.5.7",
+        "dora:Art.45"
+      ]
+    },
+    {
+      "domain": "secure-ai-development-testing-robustness",
+      "reason": "Secure development, testing and robustness.",
+      "controls": [
+        "iso-42001:A.6.2.2",
+        "iso-42001:A.6.2.5",
+        "iso-42001:A.6.1.3",
+        "iso-27001:A.5.8",
+        "oecd-ai:1.4",
+        "nist-aria:MT.1"
+      ]
+    },
+    {
+      "domain": "access-control-identity-management",
+      "reason": "Access and privileged utilities.",
+      "controls": [
+        "iso-27001:A.8.18"
+      ]
+    },
+    {
+      "domain": "network-infrastructure-security",
+      "reason": "Network and endpoint protection.",
+      "controls": [
+        "iso-27001:A.8.7"
+      ]
+    },
+    {
+      "domain": "cryptography-masking-data-loss-prevention",
+      "reason": "Data transfer, retention and disposal safeguards.",
+      "controls": [
+        "iso-27001:A.5.14",
+        "pbd:5.2"
+      ]
+    },
+    {
+      "domain": "physical-environmental-security",
+      "reason": "Physical environment.",
+      "controls": [
+        "iso-27001:A.7.4",
+        "iso-27001:A.7.11"
+      ]
+    }
+  ]
+}

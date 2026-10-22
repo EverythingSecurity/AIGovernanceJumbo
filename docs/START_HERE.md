@@ -56,6 +56,8 @@ darker the row, the more frameworks one programme can satisfy at once.
 6. **Re-check against the source.** Requirement text here is paraphrased. Before you
    claim compliance with a clause, read the clause.
 
+Ready to turn this into a plan with owners and status? See [SCOPING.md](SCOPING.md).
+
 ## 4. Using it from Python
 
 ```python
