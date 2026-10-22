@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 - 2026-10-22
+
+- **Scoping in the browser:** a **My scope** tab on the web explorer with the wizard, a plan by workstream, an editable controls table (applicability with justification, status, owner, due date, evidence, notes), bulk edits, and downloads of the scope file, a Statement of Applicability (CSV/Markdown) and the plan. Runs entirely client-side; state is kept in local storage and the downloaded file is compatible with the CLI.
+- The browser logic (`site/wizard.js`, `site/scope.js`) is checked against the Python implementation by `tests/test_site_parity.py`.
+- CSV exports (CLI and browser) neutralise cells that start with `=`, `+`, `-` or `@` so spreadsheets do not run them as formulas.
+- Scope schema: `include_level` also accepts `custom`.
+
 ## 0.3.0 - 2026-10-22
 
 - **Scoping wizard:** `aicontrols scope wizard` asks 12 plain questions about an AI system and suggests frameworks in four tiers (your answers point to these / worth considering / background / no trigger indicated), with the reason for every suggestion. Interactive, or scripted with `--answers FILE` / `--answer q=v`; `--create` adds the system to your scope file and records the answers that led to it. Regulations are only ever described as indicated by your answers, with a reminder to confirm with counsel.

@@ -8,6 +8,20 @@ along it is. It is a planning aid, not a compliance verdict.
 A worked example is in [`examples/chatbot-scope.json`](../examples/chatbot-scope.json)
 (a fictional retailer with a customer-support chatbot).
 
+## In the browser
+
+The same scoping layer is on the explorer site (the **My scope** tab): the wizard, a plan by
+workstream, an editable controls table with owners, due dates and evidence, and downloads
+for the scope file, a Statement of Applicability (CSV or Markdown) and the plan.
+
+- **It stays on your machine.** The page runs entirely in your browser. Nothing is uploaded;
+  your scope is kept in this browser's local storage.
+- **Download to keep it.** Clearing site data deletes the stored scope, so download your scope
+  file (and re-import it later, or share it privately with a colleague).
+- **Same file as the command line.** The downloaded JSON is the file `aicontrols scope`
+  reads and writes, so you can move between the two.
+- **Shared computers.** Use **Reset** to remove your scope from the browser when you finish.
+
 ## Keep the file private
 
 `aicontrols-scope.json` describes your real systems, owners and gaps. Keep it in a private

@@ -26,6 +26,12 @@ SOA_COLUMNS = ["system", "control_id", "framework_id", "ref", "title", "domain",
                "evidence", "notes"]
 
 
+def csv_safe(value) -> str:
+    """Neutralise spreadsheet formulas: a cell starting with = + - @ (or tab/CR) gets a leading '."""
+    text = "" if value is None else str(value)
+    return "'" + text if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
+
+
 class ScopeError(ValueError):
     """Raised for invalid scope operations; the message is safe to show to users."""
 
@@ -268,7 +274,7 @@ class Scope:
         rows = self.soa_rows(system_id)
         w = csv.DictWriter(out, fieldnames=SOA_COLUMNS)
         w.writeheader()
-        w.writerows(rows)
+        w.writerows({k: csv_safe(v) for k, v in row.items()} for row in rows)
         return len(rows)
 
     # ---- markdown ----------------------------------------------------------

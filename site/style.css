@@ -85,3 +85,71 @@ button.link { border: 0; background: none; padding: 0; color: var(--accent); tex
 .heat td.zero { color: var(--muted); opacity: .4; }
 .foot { padding-top: 16px; padding-bottom: 32px; border-top: 1px solid var(--line); font-size: .9rem; }
 [hidden] { display: none !important; }
+
+/* ---- My scope ---------------------------------------------------------- */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 14px; }
+.card h2, .card h3 { margin: 0 0 6px; }
+.card h3 { font-size: 1.02rem; }
+.card h4 { margin: 14px 0 4px; font-size: .9rem; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 8px 0; }
+.card label, .detail label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); margin: 6px 0; }
+.card label.inline, .detail label.inline { flex-direction: row; align-items: center; gap: 6px; color: var(--text); }
+input, textarea { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); color: var(--text); min-width: 0; max-width: 100%; }
+textarea { resize: vertical; }
+.card select, .detail select { font: inherit; padding: 7px 9px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); color: var(--text); max-width: 100%; }
+button.primary { font: inherit; font-weight: 600; padding: 9px 16px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); border-radius: var(--radius); cursor: pointer; }
+button.primary:hover { filter: brightness(1.08); }
+button.ghost.danger { color: #b42318; border-color: #b42318; }
+@media (prefers-color-scheme: dark) { button.ghost.danger { color: #fda29b; border-color: #fda29b; } }
+.privacy { border-left: 3px solid var(--accent); padding-left: 10px; }
+.intro p { max-width: 70ch; }
+.scope-msg { margin: 0 0 12px; padding: 0; }
+.scope-msg.info, .scope-msg.ok, .scope-msg.warn, .scope-msg.error { padding: 9px 12px; border-radius: var(--radius); border: 1px solid var(--line); }
+.scope-msg.ok { border-color: var(--i); } .scope-msg.warn { border-color: var(--c); }
+.scope-msg.error { border-color: #b42318; color: #b42318; }
+@media (prefers-color-scheme: dark) { .scope-msg.error { border-color: #fda29b; color: #fda29b; } }
+.wsbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; }
+.wsbar .save { flex-basis: 100%; margin: 0; }
+.subtabs { display: flex; gap: 6px; margin: 0 0 14px; flex-wrap: wrap; }
+.subtabs button { font: inherit; padding: 8px 14px; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 99px; cursor: pointer; }
+.subtabs button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+fieldset.q { border: 0; padding: 0; margin: 16px 0 0; }
+fieldset.q legend { font-weight: 600; padding: 0; margin-bottom: 6px; }
+.choices { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.card label.choice { flex-direction: row; align-items: center; gap: 4px; color: var(--text); margin: 0; }
+.help { margin: 4px 0 0; color: var(--muted); font-size: .85rem; }
+.tier { margin: 16px 0; }
+.tier h3 { font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.card label.rec { flex-direction: row; align-items: flex-start; gap: 10px; color: var(--text); padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); margin: 6px 0; }
+.rec-body ul { margin: 4px 0 0; padding-left: 18px; color: var(--muted); font-size: .88rem; }
+.tier.recommended label.rec { border-left: 3px solid var(--accent); }
+.caveat { font-weight: 600; } .sum { font-weight: 600; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; }
+.kpi-v { font-size: 1.5rem; font-weight: 700; } .kpi-l { color: var(--muted); font-size: .82rem; }
+table.grid { border-collapse: collapse; width: 100%; font-size: .88rem; }
+table.grid th, table.grid td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: middle; }
+table.grid thead th { position: sticky; top: 0; background: var(--panel); font-size: .78rem; color: var(--muted); }
+table.grid tbody th { font-weight: 500; }
+table.grid tr.open { background: rgba(var(--heat), .12); }
+.cell { width: 100%; min-width: 7.5rem; padding: 5px 8px; font-size: .85rem; }
+.meter { display: inline-block; width: 90px; height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; vertical-align: middle; }
+.meter-fill { display: block; height: 100%; background: var(--accent); }
+.filters-inline { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.filters-inline .grow { flex: 1 1 200px; }
+.fwgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 14px; margin: 10px 0; }
+.card label.fwbox { flex-direction: row; align-items: center; gap: 4px; color: var(--text); margin: 2px 0; }
+dl.answers { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; font-size: .88rem; }
+dl.answers dt { color: var(--muted); } dl.answers dd { margin: 0; font-weight: 600; }
+.export-item { margin: 14px 0; } .export-item p { margin: 4px 0 0; }
+ul.rel { padding-left: 18px; margin: 4px 0; }
+.split.controls { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+@media (max-width: 960px) { .split.controls { grid-template-columns: minmax(0, 1fr); } }
+table.ctl { table-layout: auto; }
+table.ctl tbody th { min-width: 240px; }
+table.ctl .cell { min-width: 6.5rem; }
+table.ctl input[type="date"].cell { min-width: 8.5rem; }
+.split.controls { grid-template-columns: minmax(0, 1fr) 380px; }
+@media (max-width: 1100px) { .split.controls { grid-template-columns: minmax(0, 1fr); } }

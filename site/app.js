@@ -2,10 +2,11 @@
 "use strict";
 
 // Data lives in ../data in a checkout and in ./data when deployed to GitHub Pages.
-const DATA_BASES = ["data/", "../data/"];
+// Served from /site/ in a checkout, data lives one level up; on GitHub Pages it sits beside the page.
+const DATA_BASES = location.pathname.replace(/[^/]*$/, "").endsWith("/site/") ? ["../data/", "data/"] : ["data/", "../data/"];
 const PAGE = 40;
 const state = { q: "", fw: "", dom: "", cia: "", id: "", tab: "", shown: PAGE };
-let controls = [], frameworks = [], domains = [], byId = new Map(), fwById = new Map(), domById = new Map();
+let dsVersion = "", controls = [], frameworks = [], domains = [], byId = new Map(), fwById = new Map(), domById = new Map();
 
 const $ = (id) => document.getElementById(id);
 
@@ -166,7 +167,7 @@ function writeHash() {
 function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   for (const k of ["q", "fw", "dom", "cia", "id", "tab"]) state[k] = p.get(k) || "";
-  if (state.tab !== "heatmap") state.tab = "";
+  if (state.tab !== "heatmap" && state.tab !== "scope") state.tab = "";
   if (state.fw && !fwById.has(state.fw)) state.fw = "";
   if (state.dom && !domById.has(state.dom)) state.dom = "";
   if (state.id && !byId.has(state.id)) state.id = "";
@@ -180,9 +181,9 @@ function setFilter(patch) { Object.assign(state, patch); syncInputs(); refresh()
 function select(id) { state.id = id; writeHash(); renderResults(); renderDetail(); $("detail").focus({ preventScroll: false }); }
 
 function showTab(name) {
-  state.tab = name === "heatmap" ? "heatmap" : "";
+  state.tab = name === "heatmap" || name === "scope" ? name : "";
   writeHash();
-  for (const t of ["explore", "heatmap"]) {
+  for (const t of ["explore", "heatmap", "scope"]) {
     $(`tab-${t}`).setAttribute("aria-selected", String(t === name));
     $(`view-${t}`).hidden = t !== name;
   }
@@ -192,6 +193,7 @@ async function init() {
   try {
     const [c, f, d] = await Promise.all([loadJSON("controls.json"), loadJSON("frameworks.json"), loadJSON("domains.json")]);
     controls = c.controls; frameworks = f.frameworks; domains = d.domains;
+    dsVersion = c.dataset_version;
     $("meta").textContent = `Dataset v${c.dataset_version} · ${controls.filter((x) => x.kind !== "info").length} controls · ${frameworks.length} frameworks · ${domains.length} domains`;
   } catch (e) {
     $("status").textContent = `Could not load the dataset (${e.message}). If you opened this file directly, serve the repository root instead: python3 -m http.server, then open /site/.`;
@@ -214,10 +216,12 @@ async function init() {
   $("more").addEventListener("click", () => { state.shown += PAGE; renderResults(); });
   $("tab-explore").addEventListener("click", () => showTab("explore"));
   $("tab-heatmap").addEventListener("click", () => showTab("heatmap"));
+  $("tab-scope").addEventListener("click", () => showTab("scope"));
   window.addEventListener("hashchange", () => { readHash(); syncInputs(); renderResults(); renderDetail(); showTab(state.tab || "explore"); });
 
   readHash(); syncInputs(); renderHeatmap(); renderResults(); renderDetail();
   $("status").hidden = true;
   showTab(state.tab || "explore");
+  if (window.AIC && AIC.onData) AIC.onData({ controls, frameworks, domains, dataset_version: dsVersion });
 }
 init();

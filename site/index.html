@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Controls Explorer</title>
 <meta name="description" content="Search and cross-map AI governance and security controls across ISO 42001, 27001, EU AI Act, GDPR, NIST AI RMF, MITRE ATLAS and more.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%231f4fd8%27/%3E%3Cpath d=%27M8 17l5 5 11-12%27 stroke=%27white%27 stroke-width=%273.5%27 fill=%27none%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 </head>
@@ -16,6 +17,7 @@
     <nav class="tabs" role="tablist" aria-label="Views">
       <button role="tab" id="tab-explore" aria-controls="view-explore" aria-selected="true">Explore</button>
       <button role="tab" id="tab-heatmap" aria-controls="view-heatmap" aria-selected="false">Coverage map</button>
+      <button role="tab" id="tab-scope" aria-controls="view-scope" aria-selected="false">My scope</button>
     </nav>
   </div>
 </header>
@@ -59,6 +61,10 @@
     <p class="muted">Number of controls per domain and framework. Select a cell to list them. Domains with many frameworks are where one programme can satisfy several obligations at once.</p>
     <div class="scroll"><table id="heat" class="heat"></table></div>
   </section>
+
+  <section id="view-scope" role="tabpanel" aria-labelledby="tab-scope" hidden>
+    <div id="scope-root"><p class="muted">Loading…</p></div>
+  </section>
 </main>
 
 <footer class="wrap foot">
@@ -66,6 +72,9 @@
   <p id="meta" class="muted"></p>
   <p class="muted">Licensed under Apache-2.0. Standards remain the property of their publishers.</p>
 </footer>
+<script src="wizard.js"></script>
+<script src="scope.js"></script>
+<script src="scope-ui.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
