@@ -153,3 +153,26 @@ table.ctl .cell { min-width: 6.5rem; }
 table.ctl input[type="date"].cell { min-width: 8.5rem; }
 .split.controls { grid-template-columns: minmax(0, 1fr) 380px; }
 @media (max-width: 1100px) { .split.controls { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- Workflow ----------------------------------------------------------- */
+.stagebar { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0 0 14px; padding: 0; }
+.stage-chip { font: inherit; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 99px; cursor: pointer; }
+.stage-chip .n { display: inline-grid; place-items: center; width: 1.4em; height: 1.4em; border-radius: 50%; border: 1px solid var(--line); font-size: .75rem; }
+.stage-chip.done .n { background: var(--i); color: var(--accent-ink); border-color: var(--i); }
+.stage-chip.current { border-color: var(--accent); }
+.stage-chip.viewing { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.stage-chip.viewing .n { border-color: var(--accent-ink); }
+ul.checks { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 8px; }
+ul.checks li { display: flex; gap: 10px; align-items: flex-start; }
+ul.checks .tick { width: 1.5em; flex: none; text-align: center; font-weight: 700; }
+ul.checks li.ok .tick { color: var(--i); } ul.checks li.open .tick { color: var(--muted); }
+ul.plain { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 4px; }
+.state { display: inline-block; font-size: .78rem; font-weight: 600; padding: 1px 9px; border-radius: 99px; border: 1px solid var(--line); }
+.state.effective, .state.active, .state.approved, .state.closed { color: var(--i); border-color: var(--i); }
+.state.partially_effective, .state.expiring, .state.assessed, .state.requested, .state.excepted { color: var(--c); border-color: var(--c); }
+.state.ineffective, .state.expired, .state.stale, .state.rejected, .state.overdue, .state.open { color: #b42318; border-color: #b42318; }
+@media (prefers-color-scheme: dark) { .state.ineffective, .state.expired, .state.stale, .state.rejected, .state.overdue, .state.open { color: #fda29b; border-color: #fda29b; } }
+pre.code { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; overflow: auto; font-size: .82rem; margin: 6px 0; }
+.card.inner { background: var(--bg); }
+.actorbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; justify-content: space-between; }
+label.actor { display: flex; flex-direction: column; gap: 4px; max-width: 320px; }

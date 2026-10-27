@@ -38,7 +38,7 @@ lib.related("gdpr:Art.33")
 
 **Run the governance lifecycle:** `aicontrols workflow` takes a scoped system through six stages (profile, harmonise into common controls, tailor, monitor, manage exceptions, analyse gaps) with stage gates, separation-of-duties checks and a hash-chained audit trail. See [docs/WORKFLOW.md](docs/WORKFLOW.md).
 
-**Scope in the browser:** the **My scope** tab of the web explorer runs the wizard, plan and tracker locally (nothing is uploaded) and reads and writes the same scope file.
+**Scope and run the workflow in the browser:** the **My scope** tab of the web explorer runs the wizard, plan, tracker and the six-stage governance **Workflow** locally (nothing is uploaded) and reads and writes the same scope file.
 
 **Web explorer:** `python -m http.server` in the repo root, then open
 <http://localhost:8000/site/>. It is deployed to GitHub Pages by

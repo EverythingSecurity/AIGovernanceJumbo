@@ -23,6 +23,8 @@ from __future__ import annotations
 import datetime as _dt
 import hashlib
 import json
+import math
+import re
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
@@ -216,7 +218,7 @@ class Workflow:
     def _rec(self, sid: str, control_id: str) -> dict:
         table = self.scope.data["decisions"].setdefault(sid, {})
         rec = table.setdefault(control_id, {})
-        rec["updated"] = _dt.date.today().isoformat()
+        rec["updated"] = _today().isoformat()
         return rec
 
     def _pick(self, sid: str, ids: Iterable[str], domain: Optional[str], framework: Optional[str]) -> List[Control]:
@@ -302,6 +304,8 @@ class Workflow:
             while f"CC-{n:03d}" in ccs:
                 n += 1
             cc_id = f"CC-{n:03d}"
+        elif not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]*", cc_id):
+            raise WorkflowError("a common control id starts with a letter and uses letters, digits, '-' and '_'")
         if cc_id in ccs:
             raise WorkflowError(f"common control {cc_id!r} already exists")
         dom = None
@@ -480,7 +484,8 @@ class Workflow:
                     raise WorkflowError(f"unknown common control {cc_id!r}")
                 if r.get("result") not in RESULTS:
                     raise WorkflowError(f"result must be one of {', '.join(RESULTS)}")
-                at = parse_dt(r.get("at")).astimezone(_dt.timezone.utc).isoformat().replace("+00:00", "Z")
+                at = parse_dt(r.get("at")).astimezone(_dt.timezone.utc).replace(microsecond=0) \
+                    .isoformat().replace("+00:00", "Z")
                 metrics = r.get("metrics") or {}
                 if not isinstance(metrics, dict) or not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in metrics.values()):
                     raise WorkflowError("metrics must be an object of numbers")
@@ -718,6 +723,7 @@ class Workflow:
     def policy_set(self, system_id: Optional[str], actor: str, key: str, value: str) -> dict:
         sid, actor = self.sid(system_id), self._check_actor(actor)
         stored = self.state(sid).setdefault("policy", {})
+        snapshot = json.loads(json.dumps(stored))
         base = key.split(".", 1)
         try:
             if key == "separation_of_duties":
@@ -736,8 +742,11 @@ class Workflow:
                 stored[key] = int(value)
                 new = int(value)
             elif key in ("effective_threshold", "partial_threshold", "stale_factor"):
-                stored[key] = float(value)
-                new = float(value)
+                number = float(value)
+                if not math.isfinite(number):
+                    raise ValueError
+                stored[key] = number
+                new = number
             else:
                 raise WorkflowError(f"unknown policy key {key!r}")
         except WorkflowError:
@@ -746,6 +755,8 @@ class Workflow:
             raise WorkflowError(f"invalid value {value!r} for {key}") from None
         pol = self.policy(sid)
         if not 0 <= pol["partial_threshold"] <= pol["effective_threshold"] <= 1:
+            stored.clear()  # roll back: a rejected change must not stay stored
+            stored.update(snapshot)
             raise WorkflowError("thresholds must satisfy 0 <= partial <= effective <= 1")
         self.audit(sid, actor, "SECOND_LINE_RISK_MANAGER", "POLICY_CHANGED", key, {"value": value})
         return pol

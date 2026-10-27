@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.0 - 2026-10-27
+
+- **Governance workflow in the browser:** a **Workflow** view in the My scope tab with a stage tracker, gate
+  checklist (attest, advance, force with a reason) and a panel for each of the six stages: profile and
+  targets, common controls, tailoring, monitoring (ingest, indicators, evaluate, escalations), exceptions
+  (request, assess, sign off, reject, reopen, close), and assurance (gap analysis, POA&M, report, audit trail).
+  Local only; the file is the same one the command line uses.
+- The browser engine (`site/workflow.js`) is a port of the Python one, with a synchronous SHA-256 so the audit
+  hash chain verifies identically in both. `tests/test_workflow_parity.py` runs one long scenario (successes and
+  deliberate errors) through both engines and compares every result and the final file, hash chain included.
+- Audit events carry no floating-point numbers, so hashes are identical across languages.
+- Fixes: a rejected policy change (for example an invalid threshold) is now rolled back instead of staying stored;
+  non-finite policy numbers are rejected; common-control ids must start with a letter; sub-second timestamps are
+  normalised the same way in both engines; deleting a system in the browser also removes its workflow state.
+
 ## 0.5.0 - 2026-10-27
 
 - **Governance workflow layer** (`aicontrols workflow`), implementing the six-stage Scoping and Control

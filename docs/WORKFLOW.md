@@ -164,6 +164,22 @@ aicontrols workflow audit export -o audit.jsonl
 somewhere outside the file (a ticket, a signed commit); that is what makes later rewriting of the
 whole history detectable.
 
+## In the browser
+
+The **My scope** tab of the web explorer has a **Workflow** view with the same six stages: a stage
+tracker, the gate checklist with *Attest* and *Advance* (and *Force* with a reason), and a panel per
+stage for the profile and targets, common controls, tailoring, monitoring (paste or choose a results
+file, indicators, *Evaluate now*, escalations), exceptions (request, assess, sign off, reject,
+reopen, close), and assurance (gap analysis, POA&M, report, audit trail with *Verify chain*).
+
+- It runs entirely in your browser and nothing is uploaded. The scope is stored in this browser's
+  local storage; download your scope file to keep or share it.
+- It reads and writes the same file as the command line. The browser engine
+  ([`site/workflow.js`](../site/workflow.js)) is checked against the Python one by running the same
+  long scenario through both and comparing the results and the resulting file, **hash chain
+  included**, so an audit trail written in one verifies in the other.
+- Enter who is acting in **Acting as**. It is recorded with every change and stored in this browser.
+
 ## What it is not
 
 Honesty about the limits matters more here than in the other layers.
@@ -179,7 +195,8 @@ Honesty about the limits matters more here than in the other layers.
   process-mining verification of event logs. Results arrive through the file contract above.
 - **No notifications.** Escalations and expiries are recorded and reported, not delivered.
 - **Dashboards are generated reports** (Markdown or JSON), not a live role-based web view.
-- **Not in the browser yet.** The **My scope** tab of the web explorer reads and writes the same
-  file and keeps the workflow sections intact, but it does not yet have workflow screens.
+- **The browser is not a multi-user system.** The **Workflow** view runs entirely in your browser
+  on a local copy of the file. Two people cannot work in it at once; share the downloaded file
+  instead, and treat its audit trail as the record.
 - **Planning aid, not compliance advice.** Effectiveness scores and gaps are only as good as the
   results and decisions entered.

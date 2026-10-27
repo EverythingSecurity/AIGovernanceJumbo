@@ -303,7 +303,7 @@
 
   const api = { SCHEMA_VERSION, STATUSES, DONE, FIELDS, SOA_COLUMNS, ScopeError, today, index, newScope, system, addSystem,
     setFrameworks, removeSystem, inScope, decision, setDecisions, tally, rows, status, overall, plan, relatedOpen,
-    soaRows, soaCsv, planMarkdown, soaMarkdown, validate };
+    soaRows, soaCsv, csvCell, planMarkdown, soaMarkdown, validate };
   root.AIC = root.AIC || {};
   root.AIC.scope = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

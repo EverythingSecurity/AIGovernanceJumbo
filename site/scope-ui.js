@@ -52,6 +52,10 @@
     let parsed;
     try { parsed = JSON.parse(await file.text()); } catch (e) { return say("That file is not valid JSON.", "error"); }
     const { errors, warnings } = S.validate(parsed, data);
+    if (!errors.length && AIC.workflow) {  // also check the workflow layer (hash chain, mappings, exceptions)
+      const wv = AIC.workflow.validate(parsed, data);
+      errors.push(...wv.errors); warnings.push(...wv.warnings);
+    }
     if (errors.length) {
       return say(`Cannot import: ${errors.length} problem(s). First: ${errors.slice(0, 3).join("; ")}`, "error");
     }
@@ -192,8 +196,8 @@
   }
   function subTabs() {
     return el("div", { class: "subtabs", role: "group", "aria-label": "Scope views" },
-      ["overview", "controls", "export"].map((k) => el("button", { type: "button", "aria-pressed": String(ui.sub === k), onclick: () => { ui.sub = k; ui.open = null; render(); } },
-        { overview: "Overview & plan", controls: "Controls", export: "Export" }[k])));
+      ["overview", "controls", "workflow", "export"].map((k) => el("button", { type: "button", "aria-pressed": String(ui.sub === k), onclick: () => { ui.sub = k; ui.open = null; render(); } },
+        { overview: "Overview & plan", controls: "Controls", workflow: "Workflow", export: "Export" }[k])));
   }
 
   // ---- overview --------------------------------------------------------------------------
@@ -408,10 +412,17 @@
     let body;
     if (ui.screen === "wizard" && ui.wiz) body = ui.wiz.phase === "form" ? wizardForm() : wizardResults();
     else if (ui.screen === "workspace" && scope && ui.sid) {
-      body = [workspaceBar(), subTabs(), ui.sub === "overview" ? overviewPanel() : ui.sub === "controls" ? controlsPanel() : exportPanel()];
+      body = [workspaceBar(), subTabs(), ui.sub === "overview" ? overviewPanel() : ui.sub === "controls" ? controlsPanel()
+        : ui.sub === "workflow" ? (AIC.workflowUI ? AIC.workflowUI.panel() : el("p", { class: "muted" }, "The workflow module did not load.")) : exportPanel()];
     } else body = introScreen();
     fill(root, msg, body);
   }
+
+  // What the workflow screens (workflow-ui.js) may use. Reads current state through getters.
+  AIC.scopeUI = {
+    get scope() { return scope; }, get data() { return data; }, get sid() { return ui.sid; },
+    persist, say, render, attempt, download, slug, fwName,
+  };
 
   AIC.onData = function (d) {
     data = d; root = document.getElementById("scope-root");
