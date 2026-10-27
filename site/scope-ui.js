@@ -23,7 +23,7 @@
     dirty = true;
     try { localStorage.setItem(KEY, JSON.stringify(scope)); storageOk = true; } catch (e) { storageOk = false; }
   }
-  function say(text, kind) { ui.msg = text ? { text, kind: kind || "info" } : null; const m = document.getElementById("scope-msg"); if (m) paintMsg(m); }
+  function say(text, kind, report) { ui.msg = text ? { text, kind: kind || "info" } : null; ui.report = text && report && report.length ? report : null; const m = document.getElementById("scope-msg"); if (m) paintMsg(m); }
   function paintMsg(node) {
     node.className = "scope-msg" + (ui.msg ? " " + ui.msg.kind : "");
     node.textContent = ui.msg ? ui.msg.text : "";
@@ -49,8 +49,11 @@
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   async function importFile(file) {
+    const text = await file.text();
+    const looksJson = text.trimStart().startsWith("{");
+    if (/\.csv$/i.test(file.name) || (!looksJson && text.includes(","))) return importCsv(text);
     let parsed;
-    try { parsed = JSON.parse(await file.text()); } catch (e) { return say("That file is not valid JSON.", "error"); }
+    try { parsed = JSON.parse(text); } catch (e) { return say("That file is neither a valid JSON scope file nor a CSV spreadsheet.", "error"); }
     const { errors, warnings } = S.validate(parsed, data);
     if (!errors.length && AIC.workflow) {  // also check the workflow layer (hash chain, mappings, exceptions)
       const wv = AIC.workflow.validate(parsed, data);
@@ -66,8 +69,26 @@
     say(`Imported ${scope.systems.length} system(s).` + (warnings.length ? " Warning: " + warnings[0] : ""), warnings.length ? "warn" : "ok");
     render();
   }
+  // A filled-in decisions spreadsheet (see "Download template"). All or nothing: a problem in any row means no change.
+  function importCsv(text) {
+    const rows = S.parseCsv(text);
+    const head = (rows.find((r) => !r[0].trimStart().startsWith("#")) || []).map((c) => c.trim().toLowerCase().replace(/\s+/g, "_"));
+    const hasSystemColumn = head.includes("system") || head.includes("system_id");
+    const res = S.applyDecisionsCsv(scope, data, text, { systemId: hasSystemColumn ? null : ui.sid });
+    if (res.errors.length) {
+      const lines = res.errors.slice(0, 25).map((e) => (e.row ? `Row ${e.row}: ${e.message}` : e.message));
+      if (res.errors.length > 25) lines.push(`... and ${res.errors.length - 25} more`);
+      say(`Cannot import this spreadsheet: ${res.errors.length} problem(s). Nothing was changed. Fix the cells below and import it again.`, "error", lines);
+      return render();
+    }
+    scope = res.scope; ui.sid = res.system; ui.screen = "workspace"; ui.sub = "overview"; ui.open = null;
+    persist();
+    const name = S.system(scope, res.system).name;
+    say(`Imported into “${name}”${res.created_system ? " (new system)" : ""}: ${res.applied} control(s) updated, ${res.skipped} unchanged.`, res.warnings.length ? "warn" : "ok", res.warnings);
+    render();
+  }
   function pickFile() {
-    const input = el("input", { type: "file", accept: ".json,application/json", class: "sr-only", onchange: (e) => { if (e.target.files[0]) importFile(e.target.files[0]); input.remove(); } });
+    const input = el("input", { type: "file", accept: ".json,.csv,application/json,text/csv", class: "sr-only", onchange: (e) => { if (e.target.files[0]) importFile(e.target.files[0]); input.remove(); } });
     document.body.append(input); input.click();
   }
 
@@ -87,8 +108,31 @@
       el("p", { class: "privacy" }, el("strong", {}, "Private by design. "), "Everything stays in this browser. Nothing is uploaded. Download your scope file to keep or share it; it also works with the aicontrols command line."),
       el("div", { class: "row" },
         el("button", { type: "button", class: "primary", onclick: () => startWizard() }, "Start the wizard"),
-        el("button", { type: "button", class: "ghost", onclick: pickFile }, "Import a scope file")),
+        el("button", { type: "button", class: "ghost", onclick: pickFile }, "Import a scope file or spreadsheet")),
+      templateBuilder(),
       el("p", { class: "muted" }, "A planning aid, not legal advice or a compliance verdict."));
+  }
+  // A fill-in spreadsheet for people who would rather work in Excel or Sheets than answer the wizard.
+  function templateBuilder() {
+    const chosen = new Set();
+    let org, name;
+    const make = () => {
+      if (!chosen.size) return say("Tick at least one framework for the template.", "error");
+      const sysName = name.value.trim() || "My AI system";
+      const csv = attempt(() => S.templateCsv(data, [...chosen], org.value.trim() || "My organisation", slug(sysName), sysName, null));
+      if (csv === false || csv === true) return;
+      download("aicontrols-decisions-template.csv", "\ufeff" + csv, "text/csv");  // BOM: Excel then reads it as UTF-8
+      say("Template downloaded. Fill in the decision columns, save as CSV, then import it here.", "ok");
+    };
+    return el("details", { class: "template-box" },
+      el("summary", {}, "Prefer a spreadsheet? Download a template to fill in"),
+      el("p", { class: "muted" }, "Pick the frameworks that apply. You get a CSV with one row per control and blank columns for the decision (yes or no, with a justification for no), status, owner, due date and evidence. Fill it in with Excel or Sheets, save it as CSV, then use “Import a scope file or spreadsheet”. A wrong cell is reported by row, and nothing is imported until the file is clean."),
+      el("div", { class: "grid2" },
+        el("label", {}, "Organisation", org = el("input", { placeholder: "e.g. Acme Retail" })),
+        el("label", {}, "AI system name", name = el("input", { placeholder: "e.g. Customer support chatbot" }))),
+      el("div", { class: "fwgrid" }, data.frameworks.map((f) => el("label", { class: "fwbox" },
+        el("input", { type: "checkbox", onchange: (e) => { e.target.checked ? chosen.add(f.id) : chosen.delete(f.id); if (ui.msg && ui.msg.kind === "error") say(null); } }), ` ${f.name} (${f.control_count})`))),
+      el("button", { type: "button", class: "ghost", onclick: make }, "Download template (CSV)"));
   }
 
   // ---- wizard ------------------------------------------------------------------
@@ -399,6 +443,7 @@
       el("h3", {}, "Export"),
       el("p", { class: "muted" }, "Files are generated in your browser and downloaded directly. Cells that start with = + - or @ are prefixed with an apostrophe so spreadsheets do not run them as formulas."),
       btn("Download scope file (JSON)", "Your full scope: systems, decisions and scoping basis. Re-import it here later, share it with a colleague, or use it with the aicontrols command line. Keep it private.", () => { download("aicontrols-scope.json", JSON.stringify(scope, null, 2) + "\n", "application/json"); dirty = false; say("Scope file downloaded.", "ok"); render(); }),
+      btn("Spreadsheet to fill in and re-import (CSV)", "Every control of this system with its current decision, ready to edit in Excel or Sheets and import back with “Import”. A blank cell leaves a value unchanged.", () => download(`${s.id}-decisions.csv`, "\ufeff" + S.templateCsv(data, s.frameworks, scope.organization, s.id, s.name, scope), "text/csv")),
       btn("Statement of applicability (CSV)", `One row per control (${S.inScope(scope, data, s.id).length}) with decision, justification, status, owner, due date and evidence.`, () => download(`${s.id}-soa.csv`, S.soaCsv(scope, data, s.id), "text/csv")),
       btn("Statement of applicability (Markdown)", "The same as a table you can paste into a document. A draft for review and approval.", () => download(`${s.id}-soa.md`, S.soaMarkdown(scope, data, s.id), "text/markdown")),
       btn("Governance plan (Markdown)", "Workstreams by domain, most-shared first, as shown on the Overview.", () => download(`${s.id}-plan.md`, S.planMarkdown(scope, data, s.id, full, full.length), "text/markdown")),
@@ -415,7 +460,7 @@
       body = [workspaceBar(), subTabs(), ui.sub === "overview" ? overviewPanel() : ui.sub === "controls" ? controlsPanel()
         : ui.sub === "workflow" ? (AIC.workflowUI ? AIC.workflowUI.panel() : el("p", { class: "muted" }, "The workflow module did not load.")) : exportPanel()];
     } else body = introScreen();
-    fill(root, msg, body);
+    fill(root, msg, ui.report ? el("ul", { class: "report" }, ui.report.map((t) => el("li", {}, t))) : null, body);
   }
 
   // What the workflow screens (workflow-ui.js) may use. Reads current state through getters.

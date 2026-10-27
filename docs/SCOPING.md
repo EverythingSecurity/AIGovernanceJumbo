@@ -28,6 +28,35 @@ Once a system is scoped, `aicontrols workflow` can run it through a full control
 lifecycle: common controls, tailoring and ownership, monitoring, exceptions and gap analysis. See
 [WORKFLOW.md](WORKFLOW.md).
 
+## Prefer a spreadsheet? Fill in a template and upload it
+
+For people who would rather work in Excel or Google Sheets than answer the wizard, there is a
+fill-in CSV. It has one row per control and these columns: `system, control_id, framework_id, ref,
+title, domain, c, i, a` (do not edit these) and `applicable, justification, status, owner, due,
+reviewed, updated, evidence, notes` (fill these in).
+
+- **Get a template.** On the **My scope** tab, open *Prefer a spreadsheet?*, tick the frameworks and
+  download it. Or on the command line:
+  `aicontrols scope template -s support-chatbot --frameworks iso-42001,gdpr --org "Acme" -o decisions.csv`.
+  Once a system exists, **Export > Spreadsheet to fill in and re-import** (or `aicontrols scope
+  template` against your scope file) gives the same sheet with your current decisions filled in.
+- **Fill it in.** `applicable` is `yes` or `no` (a `no` needs a `justification`). `status` is
+  `not_started`, `in_progress`, `implemented` or `verified` (labels such as "In progress" work).
+  `due` and `reviewed` are `YYYY-MM-DD`. `evidence` takes several references separated by `;`.
+  **A blank cell leaves that value unchanged.** Format the date columns as text in Excel so it
+  keeps the `YYYY-MM-DD` form.
+- **Upload it.** *Import a scope file or spreadsheet* on the site, or
+  `aicontrols scope import-csv decisions.csv`. If the system does not exist yet it is created, with the
+  frameworks found in the file; the organisation and system name come from the `# organisation:` and
+  `# system-name:` lines at the top of the template.
+- **All or nothing.** If any cell is wrong, **nothing** is imported, and every problem is listed with
+  its row, for example `Row 64: gdpr:Art.34: due must be a date like 2026-12-31, got '31/12/2026'`.
+  Fix the cells and import again. Rows you did not touch are ignored.
+- **It round-trips.** The Statement of Applicability CSV you export can be edited and imported back.
+  Semicolon-separated files and a UTF-8 byte-order mark (what Excel writes) are understood. Cells
+  that begin with `=`, `+`, `-` or `@` are exported with a leading apostrophe so spreadsheets do not
+  run them as formulas; the apostrophe is removed again on import.
+
 ## Keep the file private
 
 `aicontrols-scope.json` describes your real systems, owners and gaps. Keep it in a private

@@ -176,3 +176,9 @@ pre.code { background: var(--bg); border: 1px solid var(--line); border-radius: 
 .card.inner { background: var(--bg); }
 .actorbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; justify-content: space-between; }
 label.actor { display: flex; flex-direction: column; gap: 4px; max-width: 320px; }
+
+/* ---- spreadsheet template / import problems ----------------------------- */
+details.template-box { margin: 14px 0 6px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: var(--radius); }
+details.template-box summary { cursor: pointer; font-weight: 600; }
+ul.report { margin: -4px 0 14px; padding: 10px 12px 10px 28px; border: 1px solid #b42318; border-radius: var(--radius); font-size: .88rem; max-height: 260px; overflow: auto; background: var(--panel); }
+@media (prefers-color-scheme: dark) { ul.report { border-color: #fda29b; } }

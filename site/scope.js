@@ -301,9 +301,200 @@
     return { errors, warnings };
   }
 
+
+  // ---- spreadsheet template and import (twin of src/aicontrols/spreadsheet.py) ------------------------
+  const TEMPLATE_VERSION = "1";
+  const ALIASES = {
+    control_id: ["control_id", "control", "id", "control_id"], system: ["system", "system_id"],
+    applicable: ["applicable", "applies", "applicable_(soa)"], justification: ["justification", "reason"], status: ["status"],
+    owner: ["owner"], due: ["due", "due_date"], reviewed: ["reviewed", "last_reviewed"], evidence: ["evidence"],
+    notes: ["notes", "note", "notes_/_gap"],
+  };
+  const YES = ["yes", "y", "true", "1"], NO = ["no", "n", "false", "0"];
+
+  function firstDataLine(text) {
+    for (const line of text.split(/\r\n|\r|\n/)) {
+      const t = line.trim();
+      if (t && !t.startsWith("#") && !t.startsWith('"#')) return line;
+    }
+    return "";
+  }
+  function detectDelimiter(text) {
+    let commas = 0, semis = 0, quoted = false;
+    for (const ch of firstDataLine(text)) {
+      if (ch === '"') quoted = !quoted;
+      else if (!quoted && ch === ",") commas++;
+      else if (!quoted && ch === ";") semis++;
+    }
+    return semis > commas ? ";" : ",";
+  }
+  // CSV into records: a BOM, quoted fields with embedded newlines and "" escapes are handled.
+  function parseCsv(text, delimiter) {
+    if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+    const delim = delimiter || detectDelimiter(text);
+    const rows = [];
+    let row = [], field = [], quoted = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (quoted) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') { field.push('"'); i++; } else quoted = false;
+        } else field.push(ch);
+      } else if (ch === '"' && !field.length) quoted = true;
+      else if (ch === delim) { row.push(field.join("")); field = []; }
+      else if (ch === "\r" || ch === "\n") {
+        if (ch === "\r" && text[i + 1] === "\n") i++;
+        row.push(field.join("")); rows.push(row); row = []; field = [];
+      } else field.push(ch);
+    }
+    if (field.length || row.length) { row.push(field.join("")); rows.push(row); }
+    return rows.filter((r) => r.some((c) => c.trim()));
+  }
+  const csvLine = (cells) => Array.from(cells, csvCell).join(",");
+  const unsafe = (cell) => (cell.length > 1 && cell[0] === "'" && "=+-@".includes(cell[1]) ? cell.slice(1) : cell);
+
+  function templateComments(organisation, systemName) {
+    return [
+      `# aicontrols decisions template v${TEMPLATE_VERSION}. Fill in the decision columns, save as CSV (UTF-8) and import it on the My scope tab, or run: aicontrols scope import-csv`,
+      `# organisation: ${organisation}`, `# system-name: ${systemName}`,
+      "# applicable: yes or no (a no needs a justification). status: not_started, in_progress, implemented or verified. due and reviewed: YYYY-MM-DD (format those columns as text so Excel keeps the format).",
+      "# evidence: separate several references with a semicolon. A blank cell leaves that value unchanged. Do not edit the first columns (system to domain, c, i, a).",
+    ];
+  }
+  // A fill-in spreadsheet for the chosen frameworks; with a scope that has this system, current decisions are pre-filled.
+  function templateCsv(data, frameworks, organisation, systemId, systemName, scope) {
+    const ix = index(data);
+    const fw = [];
+    for (const f of frameworks) {
+      if (!ix.fw[f]) throw new ScopeError(`unknown framework '${f}'`);
+      if (!fw.includes(f)) fw.push(f);
+    }
+    if (!fw.length) throw new ScopeError("choose at least one framework for the template");
+    if (!/^[A-Za-z0-9_-]+$/.test(systemId || "")) throw new ScopeError("system id may contain only letters, digits, '-' and '_'");
+    const lines = [templateComments(organisation, systemName).map((c) => csvLine([c])).join("\r\n"), csvLine(SOA_COLUMNS)];
+    const known = Boolean(scope) && scope.systems.some((s) => s.id === systemId);
+    for (const c of data.controls) {
+      if (!fw.includes(c.framework_id) || c.kind !== "control") continue;
+      const d = known ? decision(scope, systemId, c.id) : { applicable: true, justification: "", owner: null, status: "not_started", due: null, reviewed: null, updated: null, evidence: [], notes: "" };
+      const row = { system: systemId, control_id: c.id, framework_id: c.framework_id, ref: c.ref, title: c.title, domain: ix.dom[c.domain_id].name,
+        c: Number(c.cia.c), i: Number(c.cia.i), a: Number(c.cia.a), applicable: d.applicable ? "yes" : "no", justification: d.justification,
+        status: d.status, owner: d.owner || "", due: d.due || "", reviewed: d.reviewed || "", updated: d.updated || "",
+        evidence: d.evidence.join("; "), notes: d.notes };
+      lines.push(csvLine(SOA_COLUMNS.map((k) => row[k])));
+    }
+    return lines.join("\r\n") + "\r\n";
+  }
+
+  const normHeader = (c) => c.trim().toLowerCase().replace(/\s+/g, "_");
+  function validDateStr(v) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+    const ms = Date.parse(v + "T00:00:00Z");
+    return !Number.isNaN(ms) && new Date(ms).toISOString().slice(0, 10) === v;
+  }
+  function csvMeta(rows) {
+    const meta = {};
+    for (const r of rows) {
+      const m = /^#\s*([a-z][a-z-]*)\s*:\s*(.*)$/.exec(r[0].trim());
+      if (m && !(m[1] in meta)) meta[m[1]] = m[2].trim();
+    }
+    return meta;
+  }
+  // Apply a decisions spreadsheet. All or nothing: on any error the input scope is returned untouched
+  // and `errors` lists every problem with its row. On success `scope` is the updated copy to keep.
+  function applyDecisionsCsv(scope, data, text, options) {
+    const opts = options || {};
+    const ix = index(data);
+    const records = parseCsv(text);
+    const meta = csvMeta(records);
+    const dataRows = records.filter((r) => !r[0].trimStart().startsWith("#"));
+    const result = { applied: 0, skipped: 0, errors: [], warnings: [], system: null, created_system: false, scope };
+    const err = result.errors;
+    if (!dataRows.length) { err.push({ row: 0, message: "the file has no header row" }); return result; }
+    const header = dataRows[0].map(normHeader);
+    const col = {};
+    for (const [name, aliases] of Object.entries(ALIASES)) for (const a of aliases) if (header.includes(a)) { col[name] = header.indexOf(a); break; }
+    if (!("control_id" in col)) { err.push({ row: 1, message: "no control_id column (found: " + header.filter(Boolean).join(", ") + ")" }); return result; }
+    const cell = (r, name) => (name in col && col[name] < r.length ? unsafe(r[col[name]].trim()) : "");
+
+    const inFile = [...new Set(dataRows.slice(1).map((r) => cell(r, "system")).filter(Boolean))].sort();
+    if (inFile.length > 1) { err.push({ row: 0, message: "the file mixes several systems: " + inFile.join(", ") }); return result; }
+    let sid = opts.systemId || (inFile.length ? inFile[0] : null);
+    if (!sid && scope && scope.systems.length === 1) sid = scope.systems[0].id;
+    if (!sid) { err.push({ row: 0, message: "cannot tell which system to import into: fill the system column or name one" }); return result; }
+    if (!/^[A-Za-z0-9_-]+$/.test(sid)) { err.push({ row: 0, message: "system id may contain only letters, digits, '-' and '_'" }); return result; }
+    result.system = sid;
+    const existing = scope ? scope.systems.find((s) => s.id === sid) : undefined;
+    if (!existing && opts.createSystem === false) { err.push({ row: 0, message: `unknown system '${sid}'` }); return result; }
+    const allowed = existing ? new Set(existing.frameworks) : null;
+
+    const changesBy = new Map(), seenRows = {};
+    const stored0 = scope ? (scope.decisions[sid] || {}) : {};
+    dataRows.slice(1).forEach((r, idx) => {
+      const n = idx + 2;
+      const cid = cell(r, "control_id");
+      if (!cid) return;
+      const c = ix.ctl[cid];
+      if (!c) { err.push({ row: n, message: `unknown control id '${cid}'` }); return; }
+      if (c.kind !== "control") { err.push({ row: n, message: `${cid} is not a control` }); return; }
+      if (allowed && !allowed.has(c.framework_id)) { err.push({ row: n, message: `${cid}: its framework is not selected for system '${sid}'` }); return; }
+      const changes = {};
+      const rawApp = cell(r, "applicable").toLowerCase();
+      if (rawApp) {
+        if (YES.includes(rawApp)) changes.applicable = true;
+        else if (NO.includes(rawApp)) changes.applicable = false;
+        else err.push({ row: n, message: `${cid}: applicable must be yes or no, got '${cell(r, "applicable")}'` });
+      }
+      const rawStatus = cell(r, "status").toLowerCase().replace(/\s+/g, "_");
+      if (rawStatus) {
+        if (STATUSES.includes(rawStatus)) changes.status = rawStatus;
+        else err.push({ row: n, message: `${cid}: status must be one of ${STATUSES.join(", ")}, got '${cell(r, "status")}'` });
+      }
+      for (const name of ["due", "reviewed"]) {
+        const v = cell(r, name);
+        if (v) {
+          if (validDateStr(v)) changes[name] = v;
+          else err.push({ row: n, message: `${cid}: ${name} must be a date like 2026-12-31, got '${v}' (format the column as text so the spreadsheet keeps it)` });
+        }
+      }
+      for (const name of ["justification", "owner", "notes"]) { const v = cell(r, name); if (v) changes[name] = v; }
+      const ev = cell(r, "evidence");
+      if (ev) changes.evidence = ev.split(";").map((x) => x.trim()).filter(Boolean);
+      const justification = changes.justification || String((stored0[cid] || {}).justification || "").trim();
+      if (changes.applicable === false && !justification) err.push({ row: n, message: `${cid}: not applicable needs a justification` });
+      if (changesBy.has(cid)) result.warnings.push(`row ${n}: ${cid} appears more than once; the last row wins (first seen in row ${seenRows[cid]})`);
+      changesBy.set(cid, changes);
+      seenRows[cid] = n;
+    });
+    if (err.length) return result;
+
+    const work = scope ? JSON.parse(JSON.stringify(scope)) : newScope("", data);
+    if (!existing) {
+      const fws = [];
+      for (const cid of changesBy.keys()) if (!fws.includes(ix.ctl[cid].framework_id)) fws.push(ix.ctl[cid].framework_id);
+      if (!fws.length) { err.push({ row: 0, message: "no control rows to import" }); return result; }
+      if (!work.systems.length) work.organization = opts.organisation || work.organization || meta.organisation || "My organisation";
+      addSystem(work, data, { id: sid, name: meta["system-name"] || sid, description: "", frameworks: fws });
+      result.created_system = true;
+    }
+    const stored = work.decisions[sid] || {};
+    const defaults = { applicable: true, status: "not_started" };
+    for (const [cid, changes] of changesBy) {
+      const plain = Object.fromEntries(Object.entries(changes).filter(([k]) => k !== "evidence"));
+      const allDefault = Object.entries(plain).every(([k, v]) => defaults[k] === v);
+      if (!(cid in stored) && allDefault && !("evidence" in changes)) { result.skipped++; continue; }
+      if (!Object.keys(plain).length && !("evidence" in changes)) { result.skipped++; continue; }
+      setDecisions(work, data, sid, [cid], plain);
+      if ("evidence" in changes) work.decisions[sid][cid].evidence = changes.evidence;
+      result.applied++;
+    }
+    result.scope = work;
+    return result;
+  }
+
   const api = { SCHEMA_VERSION, STATUSES, DONE, FIELDS, SOA_COLUMNS, ScopeError, today, index, newScope, system, addSystem,
     setFrameworks, removeSystem, inScope, decision, setDecisions, tally, rows, status, overall, plan, relatedOpen,
-    soaRows, soaCsv, csvCell, planMarkdown, soaMarkdown, validate };
+    soaRows, soaCsv, csvCell, planMarkdown, soaMarkdown, validate,
+    parseCsv, detectDelimiter, csvLine, templateCsv, applyDecisionsCsv };
   root.AIC = root.AIC || {};
   root.AIC.scope = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

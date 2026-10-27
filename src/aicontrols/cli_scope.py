@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .library import Library
 from .scope import DEFAULT_FILE, DONE, STATUSES, Scope, ScopeError
+from . import spreadsheet
 from .wizard import LEVEL_TEXT, LEVELS, QUESTIONS, REGULATION_CAVEAT, WizardError, normalize, recommend, selection
 
 PRIVACY_NOTE = ("note: this file describes your real systems and gaps. Keep it in a private "
@@ -158,6 +159,49 @@ def cmd_validate(lib: Library, a) -> int:
         print(f"{len(errors)} error(s)")
         return 1
     print("ok" + (f" ({len(warnings)} warning(s))" if warnings else ""))
+    return 0
+
+
+def cmd_template(lib: Library, a) -> int:
+    path = Path(a.file)
+    scope = Scope.load(path, lib) if path.is_file() else None
+    sid = a.system
+    if not sid and scope and len(scope.systems()) == 1:
+        sid = scope.systems()[0]["id"]
+    if not sid:
+        raise ScopeError("name the system with -s/--system (it becomes the system column)")
+    known = next((s for s in (scope.systems() if scope else []) if s["id"] == sid), None)
+    frameworks = [f.strip() for f in a.frameworks.split(",") if f.strip()] if a.frameworks else (known["frameworks"] if known else [])
+    if not frameworks:
+        raise ScopeError("choose the frameworks with --frameworks, e.g. iso-42001,gdpr")
+    org = a.org or (scope.data["organization"] if scope else None) or "My organisation"
+    text = spreadsheet.template_csv(lib, frameworks, org, sid, a.name or (known["name"] if known else sid), scope)
+    if a.output:
+        with open(a.output, "w", encoding="utf-8-sig", newline="") as fh:  # BOM: Excel then reads UTF-8
+            fh.write(text)
+        print(f"-- wrote {a.output} ({max(0, len(text.splitlines()) - 6)} controls); fill it in and import with: aicontrols scope import-csv", file=sys.stderr)
+    else:
+        sys.stdout.write(text)
+    return 0
+
+
+def cmd_import_csv(lib: Library, a) -> int:
+    text = Path(a.path).read_bytes().decode("utf-8-sig", errors="replace")
+    path = Path(a.file)
+    scope = Scope.load(path, lib) if path.is_file() else Scope.new(a.org or "", lib)  # a blank name is filled from the template
+    res = spreadsheet.import_decisions(scope, text, a.system, a.org, create_system=True)
+    for w in res["warnings"]:
+        print("warning:", w)
+    if res["errors"]:
+        for e in res["errors"][:25]:
+            print(f"error: row {e['row']}: {e['message']}" if e["row"] else f"error: {e['message']}")
+        if len(res["errors"]) > 25:
+            print(f"... and {len(res['errors']) - 25} more")
+        print(f"nothing imported: fix the {len(res['errors'])} problem(s) and try again", file=sys.stderr)
+        return 1
+    scope.save(path)
+    print(f"imported into {res['system']}{' (new system)' if res['created_system'] else ''}: "
+          f"{res['applied']} control(s) updated, {res['skipped']} unchanged")
     return 0
 
 
@@ -322,6 +366,18 @@ def add_parser(sub) -> None:
                    help="which tiers go into scope (default: recommended only)")
     p.add_argument("--json", action="store_true", help="print machine-readable output")
     p.set_defaults(fn=cmd_wizard)
+
+    p = ssub.add_parser("template", help="write a fill-in spreadsheet (CSV) of controls and decisions")
+    common(p)
+    p.add_argument("--frameworks", help="comma-separated; default: the system's own frameworks")
+    p.add_argument("--org"); p.add_argument("--name", help="display name for the system")
+    p.add_argument("-o", "--output")
+    p.set_defaults(fn=cmd_template)
+
+    p = ssub.add_parser("import-csv", help="import a filled-in spreadsheet (all or nothing)")
+    common(p)
+    p.add_argument("path"); p.add_argument("--org", help="organisation name (only used when creating a new scope file)")
+    p.set_defaults(fn=cmd_import_csv)
 
     p = ssub.add_parser("status", help="completion roll-up"); common(p)
     p.add_argument("--by", choices=["framework", "domain"], default="framework")

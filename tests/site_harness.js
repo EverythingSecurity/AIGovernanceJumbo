@@ -102,6 +102,16 @@ if (job.mode === "wizard") {
 } else if (job.mode === "wfops") {
   const results = runOps(job.scope, job.ops);
   out = { results, scope: job.scope };
+} else if (job.mode === "csv") {
+  out = {
+    parses: (job.parses || []).map((t) => S.parseCsv(t)),
+    templates: (job.templates || []).map((t) => S.templateCsv(data, t.frameworks, t.organisation, t.system_id, t.system_name, t.scope || null)),
+    imports: (job.imports || []).map((c) => {
+      const r = S.applyDecisionsCsv(c.scope || null, data, c.text, { systemId: c.system || null, organisation: c.organisation || null });
+      const { scope, ...rest } = r;
+      return { result: rest, scope };
+    }),
+  };
 } else if (job.mode === "sha") {
   out = { sha: job.strings.map((s) => WF.sha256(s)), canon: job.objects.map((o) => WF.canon(o)), spec: WF.SPEC };
 } else if (job.mode === "errors") {

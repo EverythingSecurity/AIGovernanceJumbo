@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0 - 2026-10-27
+
+- **Spreadsheet template and import.** A fill-in CSV (one row per control; decision, justification, status, owner,
+  due date, evidence, notes) that can be downloaded from the **My scope** welcome card, from **Export** (pre-filled),
+  or with `aicontrols scope template`, and imported with **Import a scope file or spreadsheet** or
+  `aicontrols scope import-csv`. Import is all-or-nothing and reports every problem by row; blank cells leave values
+  unchanged; a system that does not exist yet is created from the file.
+- The columns are those of the Statement of Applicability export, so an exported SoA can be edited and imported back.
+  Semicolon-separated CSV and a UTF-8 BOM are understood; the apostrophe added against spreadsheet formulas is removed on import.
+- `src/aicontrols/spreadsheet.py` and the matching code in `site/scope.js` are compared by `tests/test_spreadsheet.py`
+  (template text byte for byte, the CSV parser on tricky inputs, and 17 import cases including broken files).
+
 ## 0.6.0 - 2026-10-27
 
 - **Governance workflow in the browser:** a **Workflow** view in the My scope tab with a stage tracker, gate
