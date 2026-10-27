@@ -22,6 +22,12 @@ for the scope file, a Statement of Applicability (CSV or Markdown) and the plan.
   reads and writes, so you can move between the two.
 - **Shared computers.** Use **Reset** to remove your scope from the browser when you finish.
 
+## Going further: the governance workflow
+
+Once a system is scoped, `aicontrols workflow` can run it through a full control-management
+lifecycle: common controls, tailoring and ownership, monitoring, exceptions and gap analysis. See
+[WORKFLOW.md](WORKFLOW.md).
+
 ## Keep the file private
 
 `aicontrols-scope.json` describes your real systems, owners and gaps. Keep it in a private

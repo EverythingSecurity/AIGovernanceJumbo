@@ -36,6 +36,8 @@ lib.related("gdpr:Art.33")
 
 **Scope your own work:** `aicontrols scope wizard` suggests which frameworks fit an AI system from a few plain questions, and `aicontrols scope` records your AI systems, which controls apply, owners and status, and exports a Statement-of-Applicability style CSV. See [docs/SCOPING.md](docs/SCOPING.md).
 
+**Run the governance lifecycle:** `aicontrols workflow` takes a scoped system through six stages (profile, harmonise into common controls, tailor, monitor, manage exceptions, analyse gaps) with stage gates, separation-of-duties checks and a hash-chained audit trail. See [docs/WORKFLOW.md](docs/WORKFLOW.md).
+
 **Scope in the browser:** the **My scope** tab of the web explorer runs the wizard, plan and tracker locally (nothing is uploaded) and reads and writes the same scope file.
 
 **Web explorer:** `python -m http.server` in the repo root, then open

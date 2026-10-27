@@ -97,6 +97,7 @@
     const s = system(scope, systemId);
     scope.systems = scope.systems.filter((x) => x !== s);
     delete scope.decisions[s.id];
+    if (scope.workflow) delete scope.workflow[s.id];  // workflow state (aicontrols workflow) belongs to the system
   }
 
   function inScope(scope, data, systemId) {
@@ -266,7 +267,10 @@
     const errors = [], warnings = [];
     const ix = index(data);
     if (!scope || typeof scope !== "object" || Array.isArray(scope)) return { errors: ["not a scope file (expected a JSON object)"], warnings };
-    if (scope.schema_version !== SCHEMA_VERSION) errors.push(`schema_version must be '${SCHEMA_VERSION}'`);
+    // "1.1" files carry the workflow layer (aicontrols workflow); the browser keeps those sections intact.
+    if (scope.schema_version !== SCHEMA_VERSION && scope.schema_version !== "1.1") {
+      errors.push(`schema_version must be '${SCHEMA_VERSION}' (or '1.1' when the workflow layer is used)`);
+    }
     if (!Array.isArray(scope.systems)) errors.push("systems must be a list");
     if (!scope.decisions || typeof scope.decisions !== "object" || Array.isArray(scope.decisions)) errors.push("decisions must be an object");
     if (errors.length) return { errors, warnings };

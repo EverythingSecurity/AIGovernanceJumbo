@@ -7,7 +7,7 @@
   "required": ["schema_version", "dataset_version", "organization", "systems", "decisions"],
   "additionalProperties": false,
   "properties": {
-    "schema_version": {"const": "1.0"},
+    "schema_version": {"enum": ["1.0", "1.1"], "description": "1.1 files may carry the workflow layer (`workflow`, `audit`) written by `aicontrols workflow`."},
     "dataset_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
     "organization": {"type": "string"},
     "created": {"$ref": "#/$defs/date"},
@@ -45,6 +45,16 @@
         "type": "object",
         "additionalProperties": {"$ref": "#/$defs/decision"}
       }
+    },
+    "workflow": {
+      "type": "object",
+      "description": "system id -> workflow state (stage, profile, common controls, measurements, exceptions, policy). Written by `aicontrols workflow`.",
+      "additionalProperties": {"$ref": "#/$defs/workflow_state"}
+    },
+    "audit": {
+      "type": "array",
+      "description": "Hash-chained event log: tamper-evident, not immutable.",
+      "items": {"$ref": "#/$defs/audit_event"}
     }
   },
   "$defs": {
@@ -61,10 +71,93 @@
         "reviewed": {"$ref": "#/$defs/date"},
         "updated": {"$ref": "#/$defs/date"},
         "evidence": {"type": "array", "items": {"type": "string"}},
-        "notes": {"type": "string"}
+        "notes": {"type": "string"},
+        "target": {"enum": ["implemented", "verified"], "description": "Target profile for this control (workflow layer)."},
+        "target_by": {"$ref": "#/$defs/date"},
+        "implementation": {"type": "string", "description": "Tailored implementation statement (workflow layer)."},
+        "common_control": {"type": "string", "description": "Id of the common control this control maps to (workflow layer)."},
+        "common_control_gap": {"type": "string", "description": "Reason this control is deliberately not mapped (workflow layer)."}
       },
       "if": {"properties": {"applicable": {"const": false}}, "required": ["applicable"]},
       "then": {"required": ["justification"], "properties": {"justification": {"minLength": 1}}}
+    },
+    "audit_event": {
+      "type": "object",
+      "required": ["seq", "at", "actor", "role", "action", "system", "target", "details", "prev", "hash"],
+      "additionalProperties": false,
+      "properties": {
+        "seq": {"type": "integer", "minimum": 1},
+        "at": {"type": "string"},
+        "actor": {"type": "string", "minLength": 1},
+        "role": {"type": "string"},
+        "action": {"type": "string"},
+        "system": {"type": "string"},
+        "target": {"type": "string"},
+        "details": {"type": "object"},
+        "prev": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "workflow_state": {
+      "type": "object",
+      "required": ["cycle", "stage", "entered", "attestations", "profile", "common_controls", "measurements",
+                   "escalations", "exceptions", "markers"],
+      "properties": {
+        "spec_version": {"type": "string"},
+        "cycle": {"type": "integer", "minimum": 1},
+        "stage": {"enum": ["FRAMEWORK_SCOPING", "CONTROL_HARMONIZATION", "CONTROL_TAILORING",
+                           "CONTINUOUS_MONITORING", "EXCEPTION_GOVERNANCE", "TARGET_GAP_ANALYSIS"]},
+        "entered": {"type": "string"},
+        "stage_log": {"type": "array", "items": {"type": "object"}},
+        "attestations": {"type": "object"},
+        "profile": {
+          "type": "object",
+          "properties": {
+            "business_unit": {"type": "string"}, "environment": {"type": "string"}, "boundary": {"type": "string"},
+            "asset_classes": {"type": "array", "items": {"type": "string"}},
+            "risk_appetite": {"enum": ["low", "moderate", "high"]},
+            "target_default": {"enum": ["implemented", "verified"]}
+          }
+        },
+        "common_controls": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["id", "title", "owner", "reviewer", "frequency", "implementation", "evidence_required", "test", "indicators"],
+            "properties": {
+              "id": {"type": "string"}, "title": {"type": "string"},
+              "frequency": {"enum": ["daily", "weekly", "monthly", "quarterly", "annual", null]},
+              "evidence_required": {"type": "array", "items": {"type": "string"}},
+              "test": {"type": "object", "properties": {"type": {"enum": ["manual", "automated", "rcsa", null]}, "description": {"type": "string"}}},
+              "indicators": {"type": "array", "items": {"type": "object",
+                "required": ["id", "name", "kind", "metric", "breach_if"],
+                "properties": {"kind": {"enum": ["KCI", "KRI"]},
+                               "breach_if": {"type": "object", "required": ["op", "value"],
+                                             "properties": {"op": {"enum": [">", ">=", "<", "<="]}, "value": {"type": "number"}}}}}}
+            }
+          }
+        },
+        "measurements": {"type": "array", "items": {"type": "object", "required": ["cc", "at", "result"],
+                         "properties": {"result": {"enum": ["pass", "fail", "error"]}, "metrics": {"type": "object", "additionalProperties": {"type": "number"}}}}},
+        "escalations": {"type": "array", "items": {"type": "object"}},
+        "exceptions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["id", "type", "reason", "requested_by", "status", "approvals", "revision", "history"],
+            "properties": {
+              "type": {"enum": ["waiver", "delayed_remediation", "deviation"]},
+              "status": {"enum": ["requested", "assessed", "approved", "rejected", "closed"]},
+              "assessment": {"type": ["object", "null"]},
+              "approvals": {"type": "array", "items": {"type": "object"}},
+              "expires": {"$ref": "#/$defs/date"}
+            }
+          }
+        },
+        "policy": {"type": "object"},
+        "markers": {"type": "object"},
+        "completed_cycles": {"type": "array", "items": {"type": "object"}}
+      }
     }
   }
 }

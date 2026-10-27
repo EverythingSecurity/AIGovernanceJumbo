@@ -321,8 +321,8 @@ class Scope:
         errors: List[str] = []
         warnings: List[str] = []
         d = self.data
-        if d.get("schema_version") != SCHEMA_VERSION:
-            errors.append(f"schema_version must be {SCHEMA_VERSION!r}")
+        if d.get("schema_version") not in (SCHEMA_VERSION, "1.1"):
+            errors.append(f"schema_version must be {SCHEMA_VERSION!r} (or '1.1' when the workflow layer is used)")
         if d.get("dataset_version") != self.lib.dataset_version:
             warnings.append(f"scope was created against dataset {d.get('dataset_version')}, "
                             f"installed dataset is {self.lib.dataset_version}; re-check decisions")
@@ -358,4 +358,9 @@ class Scope:
                         errors.append(f"{where}: {e}")
                 if rec.get("applicable") is False and rec.get("status", "not_started") != "not_started":
                     warnings.append(f"{where}: marked not applicable but has status {rec['status']}")
+        if d.get("workflow") or d.get("audit"):
+            from .workflow import validate_workflow  # imported lazily: workflow builds on Scope
+            wf_errors, wf_warnings = validate_workflow(self)
+            errors += wf_errors
+            warnings += wf_warnings
         return errors, warnings

@@ -1,0 +1,77 @@
+{
+  "title": "GRC_Scoping_and_Control_Management_Layer",
+  "version": "2.0.0",
+  "description": "Workflow layer specification for scoping, harmonizing, and managing controls across multiple pre-loaded frameworks.",
+  "workflow": {
+    "id": "control-scoping-management-layer-v2",
+    "initialStage": "FRAMEWORK_SCOPING",
+    "stages": [
+      {
+        "id": "FRAMEWORK_SCOPING",
+        "name": "Framework Scoping & Profile Definition",
+        "assignedRole": "SCOPING_COMPLIANCE_LEAD",
+        "actions": [
+          "DEFINE_ORGANIZATIONAL_PROFILE_BOUNDARIES",
+          "RATIONALIZE_NON_APPLICABLE_OBLIGATIONS",
+          "ESTABLISH_CURRENT_VS_TARGET_PROFILES"
+        ],
+        "nextStage": "CONTROL_HARMONIZATION"
+      },
+      {
+        "id": "CONTROL_HARMONIZATION",
+        "name": "Control Harmonization & One-to-Many Mapping",
+        "assignedRole": "COMPLIANCE_ARCHITECT",
+        "actions": [
+          "MAP_PLATFORM_FRAMEWORKS_TO_COMMON_CONTROLS",
+          "DEDUPLICATE_OVERLAPPING_REQUIREMENTS",
+          "IDENTIFY_UNMAPPED_FRAMEWORK_GAPS"
+        ],
+        "nextStage": "CONTROL_TAILORING"
+      },
+      {
+        "id": "CONTROL_TAILORING",
+        "name": "Control Tailoring & Ownership Assignment",
+        "assignedRole": "FIRST_LINE_CONTROL_OWNER",
+        "actions": [
+          "CUSTOMIZE_CONTROL_IMPLEMENTATION_PARAMETERS",
+          "ASSIGN_OPERATIONAL_OWNER_AND_REVIEW_FREQUENCY",
+          "CONFIGURE_EVIDENCE_REQUIREMENTS_AND_TEST_RULES"
+        ],
+        "nextStage": "CONTINUOUS_MONITORING"
+      },
+      {
+        "id": "CONTINUOUS_MONITORING",
+        "name": "Continuous Monitoring & Evidence Ingestion",
+        "assignedRole": "AUTOMATED_CCM_ENGINE",
+        "actions": [
+          "INGEST_AUTOMATED_EVIDENCE_FEEDS",
+          "EVALUATE_KCI_KRI_THRESHOLDS",
+          "CALCULATE_REALTIME_CONTROL_EFFECTIVENESS"
+        ],
+        "nextStage": "EXCEPTION_GOVERNANCE"
+      },
+      {
+        "id": "EXCEPTION_GOVERNANCE",
+        "name": "Exception & Deviation Governance",
+        "assignedRole": "SECOND_LINE_RISK_MANAGER",
+        "actions": [
+          "PROCESS_CONTROL_EXCEPTION_REQUESTS",
+          "ASSESS_RISK_EXPOSURE_AGAINST_TOLERANCE",
+          "ENFORCE_EXECUTIVE_APPROVAL_AND_EXPIRATION_DATES"
+        ],
+        "nextStage": "TARGET_GAP_ANALYSIS"
+      },
+      {
+        "id": "TARGET_GAP_ANALYSIS",
+        "name": "Assurance & Target Gap Analysis",
+        "assignedRole": "THIRD_LINE_AUDITOR",
+        "isFinal": true,
+        "actions": [
+          "MEASURE_PROGRESS_TOWARD_TARGET_PROFILE",
+          "PRESERVE_IMMUTABLE_AUDIT_TRAIL_EVIDENCE",
+          "GENERATE_REALTIME_REGULATORY_DASHBOARDS"
+        ]
+      }
+    ]
+  }
+}

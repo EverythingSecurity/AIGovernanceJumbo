@@ -126,6 +126,19 @@ def test_validation_matches_python_on_a_corrupted_file(tmp_path, lib):
     assert sorted(site_warnings) == sorted(warnings)
 
 
+def test_browser_accepts_a_workflow_enabled_scope_file_and_keeps_it_intact(tmp_path, lib):
+    from aicontrols.workflow import Workflow
+    s = Scope.load(ROOT / "examples" / "chatbot-scope.json", lib)
+    w = Workflow(s)
+    w.enable("support-chatbot", "alice")
+    w.cc_add("support-chatbot", "arch", "Incident response", domain="incident")
+    w.cc_map("support-chatbot", "arch", "CC-001", ["gdpr:Art.33"])
+    assert s.data["schema_version"] == "1.1" and s.validate()[0] == []
+    js = node(tmp_path, {"mode": "scope", "scope": s.data, "system": "support-chatbot", "today": "2026-06-01"})
+    assert js["validate"]["errors"] == []  # a 1.1 file is not rejected by the browser
+    assert js["overall"] == s.overall("support-chatbot")  # decisions with workflow fields still count the same
+
+
 def test_files_built_by_the_browser_logic_pass_python_validation_and_schema(tmp_path, lib):
     answers = json.loads((ROOT / "examples" / "wizard-answers.json").read_text())
     built = node(tmp_path, {"mode": "build", "answers": answers})
