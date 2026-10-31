@@ -87,6 +87,10 @@
     say(`Imported into “${name}”${res.created_system ? " (new system)" : ""}: ${res.applied} control(s) updated, ${res.skipped} unchanged.`, res.warnings.length ? "warn" : "ok", res.warnings);
     render();
   }
+  function downloadScopeFile() {
+    download("aicontrols-scope.json", JSON.stringify(scope, null, 2) + "\n", "application/json");
+    dirty = false; say("Scope file downloaded.", "ok"); render();
+  }
   function pickFile() {
     const input = el("input", { type: "file", accept: ".json,.csv,application/json,text/csv", class: "sr-only", onchange: (e) => { if (e.target.files[0]) importFile(e.target.files[0]); input.remove(); } });
     document.body.append(input); input.click();
@@ -258,7 +262,8 @@
     const th = (h) => el("th", { scope: "col" }, h || el("span", { class: "sr-only" }, "Progress"));
     return el("div", {},
       el("div", { class: "kpis" }, kpi(String(o.total), "controls in scope"), kpi(String(o.applicable), "applicable"),
-        kpi(pctText(o.percent), "done"), kpi(String(late), "overdue"), kpi(`${unowned} of ${plan.length}`, "workstreams without owner", "kpi-unowned")),
+        kpi(pctText(o.percent), "done"), kpi(String(late), "overdue"), kpi(`${unowned} of ${plan.length}`, "workstreams have no owner yet", "kpi-unowned")),
+      nextSteps(),
       el("div", { class: "card" }, el("h3", {}, "By framework"),
         el("div", { class: "scroll" }, el("table", { class: "grid" },
           el("thead", {}, el("tr", {}, ["Framework", "Controls", "Applicable", "Not applicable", "Done", ""].map(th))),
@@ -266,8 +271,10 @@
             el("th", { scope: "row" }, r.label), el("td", {}, r.total), el("td", {}, r.applicable), el("td", {}, r.not_applicable),
             el("td", {}, pctText(r.percent)), el("td", {}, bar(r.percent)))))))),
       el("div", { class: "card" },
-        el("h3", {}, "Workstreams (one per domain, most-shared first)"),
-        el("p", { class: "muted" }, "A domain groups controls from different frameworks that one programme can usually satisfy. Give each workstream one owner; the owner is applied to every control in it. Marking one control done never completes related ones: review them."),
+        el("h3", {}, nFw > 1 ? "Workstreams (one per domain, most-shared first)" : "Workstreams (one per theme)"),
+        el("p", { class: "muted" }, "A workstream is a theme of work, such as supplier management or incident response. Each theme can group controls from different frameworks that one programme can usually satisfy. Give each workstream one owner; the owner is applied to every control in it. Marking one control done never completes related ones: review them."),
+        nFw === 1 ? el("p", { class: "note" }, `You selected one framework (${fwName(s.frameworks[0])}), so these workstreams are themes within it. The Frameworks column shows how many of your selected frameworks touch each theme; with one framework it is always 1. Pick more frameworks and shared themes rise to the top, so one owner does the work once.`) : null,
+        el("p", { class: "muted" }, "Type a name in the Owner box and press Enter or click away. It saves automatically; you will see “✓ Saved”."),
         el("div", { class: "row filters-inline" },
           el("label", {}, "Show", el("select", { onchange: (e) => { ui.planTop = Number(e.target.value); render(); } },
             [[5, "top 5"], [10, "top 10"], [0, "all"]].map(([v, l]) => el("option", { value: v, selected: ui.planTop === v }, l)))),
@@ -275,10 +282,10 @@
             Array.from({ length: Math.min(nFw, 4) }, (_, i) => i + 1).map((v) => el("option", { value: v, selected: minShared === v }, `${v} framework${v > 1 ? "s" : ""}`)))) : null),
         el("div", { class: "scroll" }, el("table", { class: "grid" },
           el("thead", {}, el("tr", {}, ["Workstream", "Frameworks", "Controls", "Done", "", "Owner", "Next due", "Late"].map(th))),
-          el("tbody", {}, shown.map((p) => el("tr", {},
+          el("tbody", {}, shown.map((p) => { let saved; return el("tr", {},
             el("th", { scope: "row" }, el("button", { type: "button", class: "link", onclick: () => { ui.sub = "controls"; ui.f = { q: "", fw: "", dom: p.domain_id, st: "", owner: "", late: false, shown: PAGE_ROWS }; render(); } }, p.domain)),
             el("td", {}, p.frameworks), el("td", {}, p.total), el("td", {}, pctText(p.percent)), el("td", {}, bar(p.percent)),
-            el("td", {}, el("input", { class: "cell", "aria-label": `Owner for ${p.domain}`, value: p.owners.length === 1 ? p.owners[0] : "", placeholder: p.owners.length > 1 ? "several: " + p.owners.join(", ") : "assign owner",
+            el("td", {}, saved = el("span", { class: "saved", role: "status" }), el("input", { class: "cell", "aria-label": `Owner for ${p.domain}`, value: p.owners.length === 1 ? p.owners[0] : "", placeholder: p.owners.length > 1 ? "several: " + p.owners.join(", ") : "assign owner",
               onchange: (e) => {
                 const ids = S.inScope(scope, data, s.id).filter((c) => c.domain_id === p.domain_id).map((c) => c.id);
                 const v = e.target.value.trim();
@@ -288,13 +295,50 @@
                   const left = S.plan(scope, data, s.id).filter((q) => !q.owners.length).length;
                   const k = document.getElementById("kpi-unowned");
                   if (k) k.textContent = `${left} of ${plan.length}`;
+                  saved.textContent = v ? "✓ Saved" : "✓ Cleared";
+                  setTimeout(() => { saved.textContent = ""; }, 3000);
+                  const ns = document.getElementById("next-steps");
+                  if (ns) ns.replaceWith(nextSteps());
                 }
               } })),
-            el("td", {}, p.next_due || ""), el("td", {}, p.overdue ? el("strong", {}, String(p.overdue)) : "")))))),
+            el("td", {}, p.next_due || ""), el("td", {}, p.overdue ? el("strong", {}, String(p.overdue)) : "")); })))),
         shown.length ? null : el("p", { class: "muted" }, minShared > 1
           ? `No workstream is shared by ${minShared} or more of this system's frameworks. Lower the “Shared by at least” filter.`
           : "No workstreams: this system has no controls in scope.")),
       frameworksEditor());
+  }
+  // "What now?": a short checklist computed from your data, with the next action highlighted.
+  function nextSteps() {
+    const s = sys();
+    const o = S.overall(scope, data, s.id);
+    const plan = S.plan(scope, data, s.id);
+    const unowned = plan.filter((p) => !p.owners.length).length;
+    const started = o.in_progress + o.implemented + o.verified;
+    const na = o.not_applicable;
+    const steps = [
+      { done: unowned === 0, title: "Give every workstream an owner",
+        body: unowned ? `${unowned} of ${plan.length} still need one. Use the Owner boxes below.` : `All ${plan.length} workstreams have an owner.`, action: null },
+      { done: na > 0, optional: true, title: "Check what applies",
+        body: na ? `${na} control(s) marked not applicable. Review them in Controls.` : "Open Controls and mark anything that does not apply to this system, with a short justification.",
+        action: ["Open Controls", () => { ui.sub = "controls"; render(); }] },
+      { done: started > 0, title: "Record progress",
+        body: started ? `${started} of ${o.applicable} controls are under way.` : "In Controls, filter by a workstream and set each control's status, due date and evidence. Use “Bulk edit” to update several at once.",
+        action: ["Open Controls", () => { ui.sub = "controls"; render(); }] },
+      { done: !dirty && o.total > 0, title: "Download your scope file",
+        body: dirty ? "Your work is stored only in this browser. Download the file to keep it, share it, or open it later." : "Your latest changes are in the downloaded file.",
+        action: dirty ? ["Download scope file", downloadScopeFile] : null },
+      { done: false, optional: true, later: true, title: "Optional: run the governance workflow",
+        body: "Profile, common controls, tailoring, monitoring, exceptions and gap analysis, with an audit trail.",
+        action: ["Open Workflow", () => { ui.sub = "workflow"; render(); }] },
+    ];
+    const nextIx = steps.findIndex((x) => !x.done && !x.optional);
+    return el("div", { class: "card next", id: "next-steps" },
+      el("h3", {}, "What to do next"),
+      el("ol", { class: "steps" }, steps.map((x, i) => el("li", { class: `step${x.done ? " done" : ""}${i === nextIx ? " next" : ""}` },
+        el("span", { class: "tick", "aria-hidden": "true" }, x.done ? "✓" : i === nextIx ? "→" : "○"),
+        el("div", {}, el("strong", {}, x.title), x.optional ? el("span", { class: "tag" }, "optional") : null, i === nextIx ? el("span", { class: "tag now" }, "next") : null,
+          el("div", { class: "muted" }, x.body),
+          x.action && (i === nextIx || x.optional || !x.done) ? el("button", { type: "button", class: i === nextIx ? "primary small" : "ghost small", onclick: x.action[1] }, x.action[0]) : null)))));
   }
   function frameworksEditor() {
     const s = sys(), ix = S.index(data);
@@ -454,7 +498,7 @@
     return el("div", { class: "card" },
       el("h3", {}, "Export"),
       el("p", { class: "muted" }, "Files are generated in your browser and downloaded directly. Cells that start with = + - or @ are prefixed with an apostrophe so spreadsheets do not run them as formulas."),
-      btn("Download scope file (JSON)", "Your full scope: systems, decisions and scoping basis. Re-import it here later, share it with a colleague, or use it with the aicontrols command line. Keep it private.", () => { download("aicontrols-scope.json", JSON.stringify(scope, null, 2) + "\n", "application/json"); dirty = false; say("Scope file downloaded.", "ok"); render(); }),
+      btn("Download scope file (JSON)", "Your full scope: systems, decisions and scoping basis. Re-import it here later, share it with a colleague, or use it with the aicontrols command line. Keep it private.", downloadScopeFile),
       btn("Spreadsheet to fill in and re-import (CSV)", "Every control of this system with its current decision, ready to edit in Excel or Sheets and import back with “Import”. A blank cell leaves a value unchanged.", () => download(`${s.id}-decisions.csv`, "\ufeff" + S.templateCsv(data, s.frameworks, scope.organization, s.id, s.name, scope), "text/csv")),
       btn("Statement of applicability (CSV)", `One row per control (${S.inScope(scope, data, s.id).length}) with decision, justification, status, owner, due date and evidence.`, () => download(`${s.id}-soa.csv`, S.soaCsv(scope, data, s.id), "text/csv")),
       btn("Statement of applicability (Markdown)", "The same as a table you can paste into a document. A draft for review and approval.", () => download(`${s.id}-soa.md`, S.soaMarkdown(scope, data, s.id), "text/markdown")),

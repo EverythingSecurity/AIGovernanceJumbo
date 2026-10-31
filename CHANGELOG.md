@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.2 - 2026-10-31
+
+- **"What to do next" on Overview & plan:** a checklist that tracks your progress and highlights the next action
+  (give every workstream an owner, check what applies, record progress, download your scope file, optionally run the
+  workflow), each with a button that takes you there.
+- Owner boxes now say so: a "✓ Saved" appears beside the box when an owner is saved (they save when you press Enter or
+  click away), and a hint explains it. The checklist updates as you go without moving your cursor.
+- A one-framework scope now explains what a workstream is and why the Frameworks column shows 1; the counter reads
+  "workstreams have no owner yet".
+
 ## 0.7.1 - 2026-10-31
 
 - **Overview & plan fixes** (found by reviewing the page):

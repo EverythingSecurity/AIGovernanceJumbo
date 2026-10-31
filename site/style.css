@@ -182,3 +182,17 @@ details.template-box { margin: 14px 0 6px; padding: 10px 12px; border: 1px dashe
 details.template-box summary { cursor: pointer; font-weight: 600; }
 ul.report { margin: -4px 0 14px; padding: 10px 12px 10px 28px; border: 1px solid #b42318; border-radius: var(--radius); font-size: .88rem; max-height: 260px; overflow: auto; background: var(--panel); }
 @media (prefers-color-scheme: dark) { ul.report { border-color: #fda29b; } }
+
+/* ---- next steps, saved feedback, notes ---------------------------------- */
+.next ol.steps { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.step { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); }
+.step .tick { width: 1.4em; flex: none; text-align: center; font-weight: 700; color: var(--muted); }
+.step.done .tick { color: var(--i); }
+.step.next { border-color: var(--accent); border-left-width: 4px; }
+.step.next .tick { color: var(--accent); }
+.step .tag.now { color: var(--accent); border-color: var(--accent); margin-left: 6px; }
+.step .tag { margin-left: 6px; }
+.step button { margin-top: 6px; }
+button.small { padding: 5px 12px; font-size: .88rem; }
+.saved { display: block; min-height: 1.2em; margin-bottom: 3px; color: var(--i); font-size: .78rem; font-weight: 600; }  /* space is reserved so rows do not jump */
+p.note { background: var(--bg); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 0 var(--radius) var(--radius) 0; margin: 8px 0; font-size: .92rem; }

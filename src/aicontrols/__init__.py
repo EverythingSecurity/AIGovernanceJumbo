@@ -3,4 +3,4 @@
 from .library import Control, Domain, Framework, Library, load
 
 __all__ = ["Control", "Domain", "Framework", "Library", "load"]
-__version__ = "0.7.1"
+__version__ = "0.7.2"

@@ -28,6 +28,18 @@ Once a system is scoped, `aicontrols workflow` can run it through a full control
 lifecycle: common controls, tailoring and ownership, monitoring, exceptions and gap analysis. See
 [WORKFLOW.md](WORKFLOW.md).
 
+## What to do after the wizard
+
+The **Overview & plan** tab ends with a **What to do next** checklist that follows your progress:
+
+1. **Give every workstream an owner.** Type a name in the Owner box and press Enter or click away; it saves
+   automatically ("✓ Saved"). A workstream is a theme of work (supplier management, incident response, ...) that groups
+   controls which one programme can usually satisfy.
+2. **Check what applies** (optional). In **Controls**, mark anything that does not apply, with a justification.
+3. **Record progress.** In **Controls**, set each control's status, due date and evidence (use *Bulk edit* for several).
+4. **Download your scope file.** Your work is stored only in this browser until you do.
+5. **Optionally run the governance workflow** for profile, common controls, monitoring, exceptions and gap analysis.
+
 ## Prefer a spreadsheet? Fill in a template and upload it
 
 For people who would rather work in Excel or Google Sheets than answer the wizard, there is a
