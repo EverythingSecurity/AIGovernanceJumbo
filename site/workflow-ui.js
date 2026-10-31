@@ -12,7 +12,7 @@
     rejected: "Rejected", closed: "Closed", open: "Open", overdue: "Overdue", excepted: "Excepted" };
   const ROLE_LABEL = { SECOND_LINE_RISK_MANAGER: "Second-line risk manager", EXECUTIVE_APPROVER: "Executive approver" };
 
-  const wui = { view: null, cc: null, ex: null, gap: null, proposals: null, ingestMsg: null, eval: null, picks: new Set(), auditN: 15, audit: null };
+  const wui = { policyOpen: false, view: null, cc: null, ex: null, gap: null, proposals: null, ingestMsg: null, eval: null, picks: new Set(), auditN: 15, audit: null };
   let actor = "";
   try { actor = localStorage.getItem(ACTOR_KEY) || ""; } catch (e) { /* storage may be blocked */ }
 
@@ -452,18 +452,96 @@
         el("tbody", {}, log.slice(-wui.auditN).reverse().map((e) => el("tr", {}, el("td", {}, e.seq), el("td", {}, e.at), el("td", {}, e.actor), el("td", {}, e.role), el("td", {}, e.action), el("td", {}, e.target)))))),
       log.length > wui.auditN ? el("button", { type: "button", class: "ghost", onclick: () => { wui.auditN += 30; ui().render(); } }, "Show more") : null);
   }
+  // ---- workflow rules (policy) -----------------------------------------------------------------------------------------------------
+  // The same settings as `aicontrols workflow policy`, in plain language. Each rule saves when you change it.
+  const RULES = [
+    { group: "Who must sign off", rows: [
+      { key: "separation_of_duties", kind: "bool", label: "Require different people for each role",
+        help: "The person who requests an exception cannot also assess or approve it, and a control's owner and reviewer must be different people. Checked by the name in “Acting as”. A one-person team can switch this off; the change is recorded." },
+      { key: "executive_approval_from", kind: "rating", label: "Executive sign-off needed from this risk rating",
+        help: "Exceptions rated this or higher need an executive approver. Lower-rated ones can be signed off by the second-line risk manager. Ratings: low 1–4, medium 5–9, high 10–16, critical 17–25 (likelihood × impact)." },
+    ] },
+    { group: "How long an exception can last", rows: [
+      { key: "exception_max_days.low", kind: "days", label: "Low risk: longest approval (days)", help: "An approval cannot run longer than this. Afterwards the exception expires and must be re-assessed." },
+      { key: "exception_max_days.medium", kind: "days", label: "Medium risk: longest approval (days)", help: "" },
+      { key: "exception_max_days.high", kind: "days", label: "High risk: longest approval (days)", help: "" },
+      { key: "exception_max_days.critical", kind: "days", label: "Critical risk: longest approval (days)", help: "" },
+      { key: "reassess_warning_days", kind: "days", label: "Warn before an exception expires (days)", help: "An approved exception shows as “Expiring” this many days before its end date." },
+    ] },
+    { group: "How control effectiveness is scored", rows: [
+      { key: "effectiveness_window", kind: "count", label: "Test results considered", help: "A common control is judged on its most recent results only. 5 means the last five." },
+      { key: "effective_threshold", kind: "pct", label: "Pass rate for “Effective” (%)", help: "At or above this share of passes, the control is Effective." },
+      { key: "partial_threshold", kind: "pct", label: "Pass rate for “Partially effective” (%)", help: "At or above this (but below Effective) it is Partially effective; below it, Ineffective. Cannot be higher than the Effective rate." },
+      { key: "stale_factor", kind: "factor", label: "Mark as stale after (× its test interval)", help: "A control is Stale when its latest result is older than this many times its frequency. At 1.5, a monthly control goes stale after about 46 days." },
+    ] },
+  ];
+  const ALL_RULES = RULES.flatMap((g) => g.rows);
+  const polGet = (pol, key) => key.split(".").reduce((o, k) => o[k], pol);
+  const polShow = (rule, v) => (rule.kind === "pct" ? String(Math.round(v * 100)) : String(v));
+  const changedCount = () => { const pol = W.policy(scope(), sid()); return ALL_RULES.filter((r) => polGet(pol, r.key) !== polGet(W.DEFAULT_POLICY, r.key)).length; };
+  const summaryText = () => { const n = changedCount(); return n ? `${n} changed from the defaults` : "defaults in use (suits most teams)"; };
+
+  function ruleRow(rule) {
+    const def = polGet(W.DEFAULT_POLICY, rule.key);
+    let input, saved, reset;
+    const current = () => polGet(W.policy(scope(), sid()), rule.key);
+    const row = el("div", { class: "rule" });
+    const sync = () => {
+      const changed = current() !== def;
+      input.value = rule.kind === "bool" ? String(current()) : polShow(rule, current());
+      reset.hidden = !changed; row.classList.toggle("changed", changed);
+      const sum = document.getElementById("policy-summary"); if (sum) sum.textContent = summaryText();
+      const all = document.getElementById("policy-reset-all"); if (all) all.disabled = changedCount() === 0;
+    };
+    const save = (raw) => {
+      const who = actor.trim();
+      if (!who) { ui().say("Enter who is acting (the “Acting as” field) before changing a rule.", "error"); return sync(); }
+      const value = rule.kind === "pct" ? String(Number(raw) / 100) : String(raw);
+      const ok = ui().attempt(() => W.policySet(scope(), sid(), who, rule.key, value));
+      if (ok === false) return sync();                      // refused (e.g. thresholds out of order): show the real value again
+      saved.textContent = "✓ Saved"; setTimeout(() => { saved.textContent = ""; }, 3000);
+      ui().say(`Rule changed: ${rule.label.replace(/ \(.*\)$/, "")}. Recorded in the audit trail.`, "ok");
+      sync();
+    };
+    const attrs = { id: `rule-${rule.key}`, "aria-describedby": `rule-help-${rule.key}`, onchange: (e) => save(e.target.value) };
+    const control = rule.kind === "bool"
+      ? el("select", attrs, [["true", "Yes, require it"], ["false", "No, allow the same person"]].map(([v, l]) => el("option", { value: v }, l)))
+      : rule.kind === "rating"
+        ? el("select", attrs, W.RATINGS.map((r) => el("option", { value: r }, r)))
+        : el("input", { ...attrs, type: "number", min: rule.kind === "factor" ? "0.1" : rule.kind === "pct" ? "0" : "1", max: rule.kind === "pct" ? "100" : null,
+          step: rule.kind === "factor" ? "0.1" : "1", class: "num" });
+    input = control;
+    row.append(
+      el("div", { class: "rule-text" }, el("label", { for: `rule-${rule.key}` }, rule.label), rule.help ? el("p", { class: "muted", id: `rule-help-${rule.key}` }, rule.help) : null),
+      el("div", { class: "rule-ctl" }, input,
+        reset = el("button", { type: "button", class: "ghost small", title: `Back to the default (${polShow(rule, def)})`, onclick: () => save(rule.kind === "pct" ? String(Math.round(def * 100)) : def) }, "Reset"),
+        saved = el("span", { class: "saved inline", role: "status" }),
+        el("span", { class: "muted default" }, `default ${rule.kind === "bool" ? (def ? "yes" : "no") : polShow(rule, def)}`)));
+    sync();
+    return row;
+  }
+
   function policyCard() {
-    const pol = W.policy(scope(), sid());
-    let key, val;
-    const keys = ["separation_of_duties", "executive_approval_from", "exception_max_days.low", "exception_max_days.medium", "exception_max_days.high", "exception_max_days.critical",
-      "reassess_warning_days", "effectiveness_window", "effective_threshold", "partial_threshold", "stale_factor"];
-    return el("details", { class: "card" }, el("summary", {}, "Workflow policy"),
-      el("pre", { class: "code" }, JSON.stringify(pol, null, 2)),
-      el("div", { class: "filters-inline" },
-        field("Setting", key = el("select", {}, keys.map((k) => el("option", { value: k }, k)))),
-        field("Value", val = el("input", { placeholder: "e.g. false, high, 60" })),
-        el("button", { type: "button", class: "ghost", onclick: () => act((who) => W.policySet(scope(), sid(), who, key.value, val.value), "Policy changed (recorded in the audit trail).") }, "Change")),
-      el("p", { class: "muted" }, "Turning separation of duties off is allowed for a one-person team, and is recorded."));
+    return el("details", { class: "card policy", open: wui.policyOpen ? true : false, ontoggle: (e) => { wui.policyOpen = e.target.open; } },
+      el("summary", {}, "Workflow rules (policy) ", el("span", { class: "tag", id: "policy-summary" }, summaryText())),
+      el("p", { class: "muted" }, "These rules decide how strict the exceptions process is and how control effectiveness is scored. The defaults suit most teams, so you can leave this alone. A change applies to this system only, takes effect immediately, and is recorded in the audit trail."),
+      RULES.map((g) => el("fieldset", { class: "rules" }, el("legend", {}, g.group), g.rows.map(ruleRow))),
+      el("div", { class: "row" },
+        el("button", { type: "button", class: "ghost", id: "policy-reset-all", disabled: changedCount() === 0, onclick: () => {
+          const who = actor.trim();
+          if (!who) return ui().say("Enter who is acting (the “Acting as” field) before changing a rule.", "error");
+          const pol = W.policy(scope(), sid());
+          const todo = ALL_RULES.filter((r) => polGet(pol, r.key) !== polGet(W.DEFAULT_POLICY, r.key));
+          // "partial <= effective" must hold after every step. Resetting partial first is safe when its default fits under the
+          // current effective rate; otherwise resetting effective first is (one of the two always works, since partial <= effective).
+          const partialFirst = polGet(W.DEFAULT_POLICY, "partial_threshold") <= pol.effective_threshold;
+          const rank = (k) => (k === "partial_threshold" ? (partialFirst ? 0 : 2) : k === "effective_threshold" ? (partialFirst ? 2 : 0) : 1);
+          todo.sort((x, y) => rank(x.key) - rank(y.key));
+          wui.policyOpen = true;
+          const ok = ui().attempt(() => { for (const r of todo) W.policySet(scope(), sid(), who, r.key, String(polGet(W.DEFAULT_POLICY, r.key))); });
+          if (ok !== false) { ui().say(`${todo.length} rule(s) reset to the defaults.`, "ok"); ui().render(); }
+        } }, "Reset all to defaults")),
+      el("details", {}, el("summary", {}, "Show the raw settings"), el("pre", { class: "code" }, JSON.stringify(W.policy(scope(), sid()), null, 2))));
   }
 
   // ---- the view ---------------------------------------------------------------------------------------------------------------------------

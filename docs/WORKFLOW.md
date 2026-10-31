@@ -132,9 +132,32 @@ are time-boxed by rating (defaults: 365, 180, 90 and 30 days) and cannot exceed 
 approved exception shows as *active*, then *expiring* (within 14 days), then *expired*, at which
 point the gap re-appears flagged and the stage gate blocks until it is reopened and re-assessed.
 
-Policy is changeable (and every change is audited): `aicontrols workflow policy
-exception_max_days.high=60`, `executive_approval_from=high`, `reassess_warning_days=30`,
-`separation_of_duties=false`.
+## Rules (policy)
+
+The workflow's **rules** decide how strict the exceptions process is and how control effectiveness is
+scored. They are the tool's own settings, not a compliance policy. **The defaults suit most teams; you
+can leave them alone.** A change applies to one system, takes effect at once and is recorded in the audit
+trail.
+
+| Rule | Default | What it does |
+|---|---|---|
+| `separation_of_duties` | on | The person who requests an exception cannot assess or approve it, and a common control's owner and reviewer must differ. Checked by the "Acting as" name. A one-person team can turn it off. |
+| `executive_approval_from` | medium | Exceptions rated this or higher need an executive approver; lower ones can be signed by the second-line risk manager. |
+| `exception_max_days.low / medium / high / critical` | 365 / 180 / 90 / 30 | The longest an approval can last for each rating. Afterwards the exception expires and must be re-assessed. |
+| `reassess_warning_days` | 14 | An approved exception shows as "Expiring" this many days before its end. |
+| `effectiveness_window` | 5 | A common control is judged on its most recent results only. |
+| `effective_threshold` | 90% | At or above this pass rate: Effective. |
+| `partial_threshold` | 60% | At or above this (below Effective): Partially effective; below: Ineffective. Cannot exceed the Effective rate. |
+| `stale_factor` | 1.5 | Stale when the latest result is older than this many times the control's frequency (a monthly control: about 46 days). |
+
+**In the browser** (Workflow view, bottom), the **Workflow rules (policy)** panel is collapsed by default
+and shows each rule in plain language with its default. Change a value (press Enter or click away) and
+it saves, with "✓ Saved" and a "• changed" mark; **Reset** puts one rule back and **Reset all to defaults**
+puts them all back. A refused value (for example a partial rate above the Effective rate) shows the real
+value again with the reason.
+
+**On the command line:** `aicontrols workflow policy` shows the rules;
+`aicontrols workflow policy exception_max_days.high=60` or `separation_of_duties=false` changes one.
 
 ## Gap analysis, POA&M and reporting
 

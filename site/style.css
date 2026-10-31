@@ -196,3 +196,17 @@ ul.report { margin: -4px 0 14px; padding: 10px 12px 10px 28px; border: 1px solid
 button.small { padding: 5px 12px; font-size: .88rem; }
 .saved { display: block; min-height: 1.2em; margin-bottom: 3px; color: var(--i); font-size: .78rem; font-weight: 600; }  /* space is reserved so rows do not jump */
 p.note { background: var(--bg); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 0 var(--radius) var(--radius) 0; margin: 8px 0; font-size: .92rem; }
+
+/* ---- workflow rules (policy) -------------------------------------------- */
+details.policy fieldset.rules { border: 0; border-top: 1px solid var(--line); margin: 14px 0 0; padding: 8px 0 0; }
+details.policy fieldset.rules legend { padding: 0 8px 0 0; font-weight: 700; font-size: .92rem; }
+.rule { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(220px, 1fr); gap: 6px 22px; padding: 10px 0; border-top: 1px solid var(--line); align-items: start; }
+.rule:first-of-type { border-top: 0; }
+.rule .rule-text label { font-weight: 600; color: var(--text); font-size: .95rem; }
+.rule .rule-text p { margin: 3px 0 0; font-size: .85rem; }
+.rule .rule-ctl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.rule .rule-ctl input.num { width: 6.5rem; }
+.rule .rule-ctl .default { font-size: .78rem; flex-basis: 100%; }
+.rule.changed .rule-text label::after { content: " • changed"; color: var(--accent); font-weight: 600; font-size: .78rem; }
+.saved.inline { display: inline; min-height: 0; margin: 0; }
+@media (max-width: 700px) { .rule { grid-template-columns: 1fr; } }

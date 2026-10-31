@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.3 - 2026-10-31
+
+- **Workflow rules (policy) made understandable.** The browser's policy panel was raw JSON plus a dropdown of key names.
+  It is now a collapsed panel of plain-language rules in three groups (who must sign off, how long an exception can last,
+  how control effectiveness is scored), each with a description, the right kind of control, its default, a "• changed"
+  mark and a per-rule **Reset**, plus **Reset all to defaults**. Changes save when you press Enter or click away and are
+  recorded in the audit trail; a refused value (for example a partial rate above the Effective rate) shows the real value
+  again with the reason. The raw settings remain under "Show the raw settings".
+- `docs/WORKFLOW.md` has a section explaining every rule.
+
 ## 0.7.2 - 2026-10-31
 
 - **"What to do next" on Overview & plan:** a checklist that tracks your progress and highlights the next action

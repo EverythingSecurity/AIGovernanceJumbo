@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aicontrols"
-version = "0.7.2"
+version = "0.7.3"
 description = "Cross-mapped AI governance and security controls (ISO 42001, 27001, EU AI Act, GDPR, NIST AI RMF, MITRE ATLAS and more) as data, a Python API and a CLI."
 readme = "README.md"
 requires-python = ">=3.9"
