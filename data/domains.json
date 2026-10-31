@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "dataset_version": "0.2.0",
+  "dataset_version": "0.2.1",
   "license": "Apache-2.0",
   "copyright": "Copyright 2026 Mayank",
   "disclaimer": "Not legal or audit advice. Requirement text is a condensed paraphrase; verify against the authoritative source. CIA classifications, domain groupings and cross-framework mappings are expert judgement. Provided AS IS. Standards referenced remain the property of their publishers; see NOTICE and DISCLAIMER.md.",
@@ -100,7 +100,8 @@
         "iso-27001:A.8.6",
         "iso-27001:A.8.13",
         "iso-27001:A.8.14",
-        "dora:Art.11"
+        "dora:Art.11",
+        "dora:Art.12"
       ]
     },
     {
@@ -575,13 +576,11 @@
         "dora:Art.5",
         "dora:Art.6",
         "dora:Art.7",
-        "dora:Art.12",
         "dora:Art.16",
         "dora:Art.24",
+        "dora:Art.25",
         "dora:Art.26",
         "dora:Art.27",
-        "dora:Art.28",
-        "dora:Art.29",
         "dora:Art.31"
       ]
     },
@@ -776,7 +775,6 @@
         "iso-27001:A.8.33",
         "eu-ai-act:Art.55",
         "dora:Art.9",
-        "dora:Art.25",
         "nist-ai-rmf:Measure-1",
         "nist-ai-rmf:Measure-2",
         "nist-ai-rmf:Measure-4",
@@ -809,6 +807,8 @@
         "iso-17021-1:7.5",
         "eu-ai-act:Art.25",
         "gdpr:Art.28",
+        "dora:Art.28",
+        "dora:Art.29",
         "dora:Art.30",
         "nist-ai-rmf:Govern-6",
         "nist-ai-rmf:Map-4",

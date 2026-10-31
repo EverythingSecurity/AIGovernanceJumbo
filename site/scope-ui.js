@@ -251,14 +251,17 @@
     const plan = S.plan(scope, data, s.id);
     const late = plan.reduce((a, p) => a + p.overdue, 0);
     const unowned = plan.filter((p) => !p.owners.length).length;
-    const kpi = (v, l) => el("div", { class: "kpi" }, el("div", { class: "kpi-v" }, v), el("div", { class: "kpi-l" }, l));
-    const shown = plan.filter((p) => p.frameworks >= ui.planMin).slice(0, ui.planTop || plan.length);
+    const kpi = (v, l, id) => el("div", { class: "kpi" }, el("div", { class: "kpi-v", id }, v), el("div", { class: "kpi-l" }, l));
+    const nFw = s.frameworks.length;
+    const minShared = Math.min(ui.planMin, Math.max(1, nFw));  // a filter left over from another system must not hide everything
+    const shown = plan.filter((p) => p.frameworks >= minShared).slice(0, ui.planTop || plan.length);
+    const th = (h) => el("th", { scope: "col" }, h || el("span", { class: "sr-only" }, "Progress"));
     return el("div", {},
       el("div", { class: "kpis" }, kpi(String(o.total), "controls in scope"), kpi(String(o.applicable), "applicable"),
-        kpi(pctText(o.percent), "done"), kpi(String(late), "overdue"), kpi(`${unowned} of ${plan.length}`, "workstreams without owner")),
+        kpi(pctText(o.percent), "done"), kpi(String(late), "overdue"), kpi(`${unowned} of ${plan.length}`, "workstreams without owner", "kpi-unowned")),
       el("div", { class: "card" }, el("h3", {}, "By framework"),
         el("div", { class: "scroll" }, el("table", { class: "grid" },
-          el("thead", {}, el("tr", {}, ["Framework", "Controls", "Applicable", "Not applicable", "Done", ""].map((h) => el("th", { scope: "col" }, h)))),
+          el("thead", {}, el("tr", {}, ["Framework", "Controls", "Applicable", "Not applicable", "Done", ""].map(th))),
           el("tbody", {}, S.status(scope, data, s.id, "framework").map((r) => el("tr", {},
             el("th", { scope: "row" }, r.label), el("td", {}, r.total), el("td", {}, r.applicable), el("td", {}, r.not_applicable),
             el("td", {}, pctText(r.percent)), el("td", {}, bar(r.percent)))))))),
@@ -268,10 +271,10 @@
         el("div", { class: "row filters-inline" },
           el("label", {}, "Show", el("select", { onchange: (e) => { ui.planTop = Number(e.target.value); render(); } },
             [[5, "top 5"], [10, "top 10"], [0, "all"]].map(([v, l]) => el("option", { value: v, selected: ui.planTop === v }, l)))),
-          el("label", {}, "Shared by at least", el("select", { onchange: (e) => { ui.planMin = Number(e.target.value); render(); } },
-            [1, 2, 3, 4].map((v) => el("option", { value: v, selected: ui.planMin === v }, `${v} framework${v > 1 ? "s" : ""}`))))),
+          nFw > 1 ? el("label", {}, "Shared by at least", el("select", { onchange: (e) => { ui.planMin = Number(e.target.value); render(); } },
+            Array.from({ length: Math.min(nFw, 4) }, (_, i) => i + 1).map((v) => el("option", { value: v, selected: minShared === v }, `${v} framework${v > 1 ? "s" : ""}`)))) : null),
         el("div", { class: "scroll" }, el("table", { class: "grid" },
-          el("thead", {}, el("tr", {}, ["Workstream", "Frameworks", "Controls", "Done", "", "Owner", "Next due", "Late"].map((h) => el("th", { scope: "col" }, h)))),
+          el("thead", {}, el("tr", {}, ["Workstream", "Frameworks", "Controls", "Done", "", "Owner", "Next due", "Late"].map(th))),
           el("tbody", {}, shown.map((p) => el("tr", {},
             el("th", { scope: "row" }, el("button", { type: "button", class: "link", onclick: () => { ui.sub = "controls"; ui.f = { q: "", fw: "", dom: p.domain_id, st: "", owner: "", late: false, shown: PAGE_ROWS }; render(); } }, p.domain)),
             el("td", {}, p.frameworks), el("td", {}, p.total), el("td", {}, pctText(p.percent)), el("td", {}, bar(p.percent)),
@@ -279,9 +282,18 @@
               onchange: (e) => {
                 const ids = S.inScope(scope, data, s.id).filter((c) => c.domain_id === p.domain_id).map((c) => c.id);
                 const v = e.target.value.trim();
-                if (attempt(() => S.setDecisions(scope, data, s.id, ids, { owner: v || null }, { allowClear: true }))) { say(`Owner ${v ? "set to " + v : "cleared"} for ${ids.length} control(s) in “${p.domain}”.`, "ok"); render(); }
+                if (attempt(() => S.setDecisions(scope, data, s.id, ids, { owner: v || null }, { allowClear: true }))) {
+                  say(`Owner ${v ? "set to " + v : "cleared"} for ${ids.length} control(s) in “${p.domain}”.`, "ok");
+                  // Update the counter in place: rebuilding the page here would drop keyboard focus mid-edit.
+                  const left = S.plan(scope, data, s.id).filter((q) => !q.owners.length).length;
+                  const k = document.getElementById("kpi-unowned");
+                  if (k) k.textContent = `${left} of ${plan.length}`;
+                }
               } })),
-            el("td", {}, p.next_due || ""), el("td", {}, p.overdue ? el("strong", {}, String(p.overdue)) : ""))))))),
+            el("td", {}, p.next_due || ""), el("td", {}, p.overdue ? el("strong", {}, String(p.overdue)) : "")))))),
+        shown.length ? null : el("p", { class: "muted" }, minShared > 1
+          ? `No workstream is shared by ${minShared} or more of this system's frameworks. Lower the “Shared by at least” filter.`
+          : "No workstreams: this system has no controls in scope.")),
       frameworksEditor());
   }
   function frameworksEditor() {

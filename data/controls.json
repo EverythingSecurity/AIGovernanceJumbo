@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "dataset_version": "0.2.0",
+  "dataset_version": "0.2.1",
   "license": "Apache-2.0",
   "copyright": "Copyright 2026 Mayank",
   "disclaimer": "Not legal or audit advice. Requirement text is a condensed paraphrase; verify against the authoritative source. CIA classifications, domain groupings and cross-framework mappings are expert judgement. Provided AS IS. Standards referenced remain the property of their publishers; see NOTICE and DISCLAIMER.md.",
@@ -7597,7 +7597,7 @@
       "ref": "Art.12",
       "title": "Backup policies and procedures",
       "kind": "control",
-      "domain_id": "operational-resilience-ict-third-party-risk-dora",
+      "domain_id": "business-continuity-resilience-availability",
       "section": "Chapter II - ICT risk management (Art.5-16)",
       "requirement": "Maintain backup policies specifying frequency, type and location/scope of backups; keep restoration systems separate from the primary system and activatable without undue delay; test restorability so restore times align with RTOs; cloud-...",
       "cia": {
@@ -7750,7 +7750,7 @@
       "ref": "Art.25",
       "title": "Testing of ICT tools and systems",
       "kind": "control",
-      "domain_id": "secure-ai-development-testing-robustness",
+      "domain_id": "operational-resilience-ict-third-party-risk-dora",
       "section": "Chapter IV - Digital operational resilience testing (Art.24-27)",
       "requirement": "Perform a range of basic tests: vulnerability assessments/scans, network security assessments, source code reviews, performance tests, end-to-end tests, and scenario-based compatibility tests.",
       "cia": {
@@ -7801,7 +7801,7 @@
       "ref": "Art.28",
       "title": "General principles for managing ICT third-party risk",
       "kind": "control",
-      "domain_id": "operational-resilience-ict-third-party-risk-dora",
+      "domain_id": "third-party-supplier-ai-supply-chain",
       "section": "Chapter V S1 - Managing ICT third-party risk - key principles (Art.28-30)",
       "requirement": "Adopt, review and update an ICT third-party risk policy; record all ICT service arrangements in a Register of Information (submitted at least annually to the competent authority); perform pre-contractual due diligence for critical/import...",
       "cia": {
@@ -7818,7 +7818,7 @@
       "ref": "Art.29",
       "title": "Preliminary assessment of ICT concentration risk at entity level",
       "kind": "control",
-      "domain_id": "operational-resilience-ict-third-party-risk-dora",
+      "domain_id": "third-party-supplier-ai-supply-chain",
       "section": "Chapter V S1 - Managing ICT third-party risk - key principles (Art.28-30)",
       "requirement": "Assess, before entering a new ICT service arrangement, the entity-level concentration risk, including the risk that entire ICT services could become unavailable due to reliance on a single provider.",
       "cia": {

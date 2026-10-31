@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.1 - 2026-10-31
+
+- **Overview & plan fixes** (found by reviewing the page):
+  - The "Shared by at least" filter offered 2-4 frameworks even for a one-framework system, and selecting it showed an
+    empty table with no explanation. It now offers only what the system can have, is hidden for a single framework, and
+    an empty result says why. A filter left over from another system can no longer hide every workstream.
+  - Entering a workstream owner rebuilt the whole page and dropped keyboard focus. The counter now updates in place.
+  - Table headers for the progress column are labelled for screen readers; the page has a proper heading structure
+    (the accessibility scan is clean).
+- **DORA grouping made consistent** (dataset 0.2.1): Art.25 now sits with the other testing articles (24-27), Art.28 and
+  Art.29 with the other third-party article (Art.30), and Art.12 (backup) with Art.11 (recovery). The previous domain
+  audit had moved some of each group and left the rest behind, so one regulation was split across workstreams.
+
 ## 0.7.0 - 2026-10-27
 
 - **Spreadsheet template and import.** A fill-in CSV (one row per control; decision, justification, status, owner,

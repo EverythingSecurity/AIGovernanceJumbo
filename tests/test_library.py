@@ -107,3 +107,12 @@ def test_override_file_is_consistent_with_the_dataset(lib):
             assert cid not in seen, f"{cid} listed twice"
             seen.add(cid)
             assert lib.get(cid).domain_id == group["domain"]
+
+
+def test_dora_is_grouped_coherently(lib):
+    """One regulation's chapters must not be scattered across unrelated workstreams."""
+    dom = lambda ref: lib.get(f"dora:{ref}").domain_id  # noqa: E731
+    resilience = "operational-resilience-ict-third-party-risk-dora"
+    assert {dom(f"Art.{n}") for n in (24, 25, 26, 27)} == {resilience}  # testing articles together
+    assert {dom(f"Art.{n}") for n in (28, 29, 30)} == {"third-party-supplier-ai-supply-chain"}  # third-party articles together
+    assert {dom(f"Art.{n}") for n in (11, 12)} == {"business-continuity-resilience-availability"}  # recovery and backup together

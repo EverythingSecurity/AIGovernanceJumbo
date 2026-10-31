@@ -35,7 +35,7 @@ build restores the prefix, so Annex A is `iso-27001:A.5.1` and the clause is `is
 - **Domain assignment is judgement, and the workbook's original assignments contained many
   errors.** For example, ISO 42001 6.1.2 (AI risk assessment) was filed under
   *Documentation*, ISO 27090 items under *Human Resources*, and GDPR "Definitions" under
-  *Incident Management*. Version 0.2.0 corrects 137 of the 557 assignments through
+  *Incident Management*. Versions 0.2.0 and 0.2.1 correct 141 of the 557 assignments through
   [`tools/domain_overrides.json`](../tools/domain_overrides.json), applied by the build, with
   a reason per group. The source workbook files are left as they were. The corrections are
   themselves judgement calls: dispute any of them with an issue, and expect more to be found.

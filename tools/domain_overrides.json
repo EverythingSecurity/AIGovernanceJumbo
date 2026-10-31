@@ -200,7 +200,9 @@
         "dora:Art.30",
         "iso-27001:A.5.22",
         "iso-27001:A.5.23",
-        "pbd:5.3"
+        "pbd:5.3",
+        "dora:Art.28",
+        "dora:Art.29"
       ]
     },
     {
@@ -257,9 +259,10 @@
     },
     {
       "domain": "operational-resilience-ict-third-party-risk-dora",
-      "reason": "DORA operational resilience testing.",
+      "reason": "DORA operational resilience testing (Art.24-27 belong together; Art.25 had been left behind in secure development).",
       "controls": [
-        "dora:Art.24"
+        "dora:Art.24",
+        "dora:Art.25"
       ]
     },
     {
@@ -310,6 +313,13 @@
       "controls": [
         "iso-27001:A.7.4",
         "iso-27001:A.7.11"
+      ]
+    },
+    {
+      "domain": "business-continuity-resilience-availability",
+      "reason": "Backup and recovery sit with business continuity, next to DORA Art.11.",
+      "controls": [
+        "dora:Art.12"
       ]
     }
   ]
