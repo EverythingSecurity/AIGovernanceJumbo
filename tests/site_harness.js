@@ -12,6 +12,7 @@ const data = { controls: controls.controls, frameworks: load("frameworks").frame
   dataset_version: controls.dataset_version };
 
 const WF = require(path.join(root, "site", "workflow.js"));
+const GRC = require(path.join(root, "site", "grc.js"));
 
 // Runs a list of workflow operations against a scope file; the Python twin lives in tests/test_workflow_parity.py.
 function runOps(scope, ops) {
@@ -57,6 +58,31 @@ function runOps(scope, ops) {
     eff: (o) => WF.effectiveness(scope, sid, o.cc),
     exceptions: () => WF.exceptions(scope, sid),
     validate: () => WF.validate(scope, data),
+    // ---- GRC layer
+    grc_add: (o) => GRC.add(scope, o.register, o.by, o.fields),
+    grc_update: (o) => GRC.update(scope, o.register, o.by, o.id, o.fields),
+    grc_remove: (o) => { GRC.remove(scope, o.register, o.by, o.id); return null; },
+    grc_link: (o) => GRC.link(scope, sid, o.by, o.cc, { policy: o.policy || [], guideline: o.guideline || [], sop: o.sop || [], evidence_sources: o.evidence_sources || [], unlink: Boolean(o.unlink) }),
+    grc_scope_statement: (o) => GRC.setScopeStatement(scope, data, o.by, o.framework, o.statement, o.reviewed || null),
+    grc_scope_review: (o) => GRC.reviewScope(scope, o.by, o.date || null),
+    grc_mapping_review: (o) => GRC.reviewMappings(scope, sid, o.by, o.cc, o.owner, o.date || null),
+    grc_roles: (o) => GRC.setRoles(scope, o.by, o.role, o.names),
+    grc_setting: (o) => GRC.setSetting(scope, data, o.by, o.key, o.value),
+    grc_seed: (o) => GRC.seedEvidenceSources(scope, o.by),
+    grc_records: (o) => GRC.records(scope, o.register),
+    grc_matrix: () => GRC.matrix(scope, data, sid),
+    grc_matrix_summary: () => GRC.matrixSummary(GRC.matrix(scope, data, sid)),
+    grc_matrix_csv: () => GRC.matrixCsv(scope, data, sid),
+    grc_coverage: () => GRC.coverage(scope, data, sid),
+    grc_kpis: () => GRC.kpis(scope, data, sid),
+    grc_streams: () => GRC.streams(scope, data, sid),
+    grc_lifecycle: () => GRC.lifecycle(scope, data, sid),
+    grc_artifacts: () => GRC.artifacts(scope, data, sid),
+    grc_roles_list: () => GRC.roles(scope),
+    grc_settings: () => GRC.settings(scope),
+    grc_report: (o) => GRC.report(scope, data, sid, o.by, true),
+    grc_report_md: (o) => GRC.reportMarkdown(scope, data, sid, o.by, true),
+    grc_validate: () => GRC.validate(scope, data),
   };
   for (const o of ops) {
     try { results.push({ ok: handlers[o.op](o) }); }
@@ -113,7 +139,7 @@ if (job.mode === "wizard") {
     }),
   };
 } else if (job.mode === "sha") {
-  out = { sha: job.strings.map((s) => WF.sha256(s)), canon: job.objects.map((o) => WF.canon(o)), spec: WF.SPEC };
+  out = { sha: job.strings.map((s) => WF.sha256(s)), canon: job.objects.map((o) => WF.canon(o)), spec: WF.SPEC, grc_spec: GRC.SPEC };
 } else if (job.mode === "errors") {
   out = job.answers_list.map((a) => { try { W.normalize(a); return null; } catch (e) { return e.message; } });
 }

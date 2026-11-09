@@ -10,7 +10,7 @@ import textwrap
 from typing import List, Optional
 
 from . import __version__
-from . import cli_scope, cli_workflow
+from . import cli_grc, cli_scope, cli_workflow
 from .library import Control, Library, load
 from .scope import ScopeError
 from .wizard import WizardError
@@ -170,6 +170,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     cli_scope.add_parser(sub)
     cli_workflow.add_parser(sub)
+    cli_grc.add_parser(sub)
     return p
 
 

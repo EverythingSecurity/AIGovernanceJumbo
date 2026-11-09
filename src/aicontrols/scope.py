@@ -11,6 +11,7 @@ from __future__ import annotations
 import csv
 import datetime as _dt
 import json
+import math
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
@@ -24,6 +25,15 @@ FIELDS = ("applicable", "justification", "owner", "status", "due", "reviewed", "
 SOA_COLUMNS = ["system", "control_id", "framework_id", "ref", "title", "domain", "c", "i", "a",
                "applicable", "justification", "status", "owner", "due", "reviewed", "updated",
                "evidence", "notes"]
+
+
+def round_half_up(x: float, ndigits: int = 1) -> float:
+    """Round halves up, like JavaScript's Math.round, so the command line and the browser always agree.
+
+    Python's own round() rounds halves to even: round(6.25, 1) is 6.2 while the browser shows 6.3.
+    """
+    f = 10 ** ndigits
+    return math.floor(x * f + 0.5) / f
 
 
 def csv_safe(value) -> str:
@@ -203,7 +213,7 @@ class Scope:
             t["applicable"] += 1
             t[d["status"]] += 1
         done = t["implemented"] + t["verified"]
-        t["percent"] = round(100 * done / t["applicable"], 1) if t["applicable"] else None
+        t["percent"] = round_half_up(100 * done / t["applicable"], 1) if t["applicable"] else None
         return t
 
     def status(self, system_id: Optional[str], by: str = "framework") -> List[dict]:
@@ -321,8 +331,8 @@ class Scope:
         errors: List[str] = []
         warnings: List[str] = []
         d = self.data
-        if d.get("schema_version") not in (SCHEMA_VERSION, "1.1"):
-            errors.append(f"schema_version must be {SCHEMA_VERSION!r} (or '1.1' when the workflow layer is used)")
+        if d.get("schema_version") not in (SCHEMA_VERSION, "1.1", "1.2"):
+            errors.append(f"schema_version must be {SCHEMA_VERSION!r} (or '1.1'/'1.2' when the workflow or GRC layer is used)")
         if d.get("dataset_version") != self.lib.dataset_version:
             warnings.append(f"scope was created against dataset {d.get('dataset_version')}, "
                             f"installed dataset is {self.lib.dataset_version}; re-check decisions")
@@ -363,4 +373,9 @@ class Scope:
             wf_errors, wf_warnings = validate_workflow(self)
             errors += wf_errors
             warnings += wf_warnings
+        if d.get("grc"):
+            from .grc import validate_grc  # imported lazily: the GRC layer builds on Scope and Workflow
+            g_errors, g_warnings = validate_grc(self)
+            errors += g_errors
+            warnings += g_warnings
         return errors, warnings

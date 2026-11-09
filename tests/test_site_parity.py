@@ -152,3 +152,18 @@ def test_files_built_by_the_browser_logic_pass_python_validation_and_schema(tmp_
     jsonschema.Draft202012Validator(schema).validate(built)
     assert built["systems"][0]["scoping"]["include_level"] == "consider"
     assert built["decisions"]["bot"][next(iter(built["decisions"]["bot"]))]["evidence"] == ["a", "b"]
+
+
+def test_percentages_round_halves_up_in_both_implementations(tmp_path, lib):
+    """Python's round() rounds halves to even (6.25 -> 6.2); the browser must never show a different figure."""
+    s = Scope.new("O", lib)
+    s.add_system("bot", "Bot", ["gdpr"])
+    ids = [c.id for c in s.in_scope("bot")]
+    s.set("bot", s.select("bot", ids[16:]), applicable=False, justification="n/a")       # 39 controls, 16 stay applicable
+    s.set("bot", s.select("bot", ids[:1]), status="implemented")                          # 1 of 16 = 6.25 %
+    js = node(tmp_path, {"mode": "scope", "scope": s.data, "system": "bot", "today": "2026-06-01"})
+    assert s.overall("bot")["percent"] == 6.3 and js["overall"]["percent"] == 6.3
+    s.set("bot", s.select("bot", ids[1:5]), status="implemented")                         # 5 of 16 = 31.25 %
+    js = node(tmp_path, {"mode": "scope", "scope": s.data, "system": "bot", "today": "2026-06-01"})
+    assert s.overall("bot")["percent"] == 31.3 and js["overall"]["percent"] == 31.3
+    assert js["status_framework"] == s.status("bot", "framework") and js["plan"] == s.plan("bot", today="2026-06-01")

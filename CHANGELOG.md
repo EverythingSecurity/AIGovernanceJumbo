@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.0 - 2026-11-09
+
+- **GRC management layer** (new): requirement, clause, policy/guideline/SOP, control, evidence, audit chain on top of scoping
+  and the workflow. `aicontrols grc` and a **GRC** view in the browser: requirement-to-control mapping matrix (CSV export),
+  document, risk, finding, audit, scope and evidence-source registers, coverage by framework with reuse from an anchor
+  framework (default ISO 42001), KPIs/KRIs, the five ISO 42001 streams, a computed 10-step lifecycle and artifacts checklist,
+  roles, settings, and a management report. See `docs/GRC.md`.
+- Scope file schema 1.2 (1.0 and 1.1 still load). The model lives in one spec file (`grc_spec.json`); `tools/build_site_spec.py`
+  generates the browser copy and a test fails if it is stale.
+- Python and browser engines are checked against each other step by step, including the audit hash chain.
+- Fix: percentages now round halves up in both Python and the browser (they disagreed on values such as 6.25).
+- Fix: reading workflow or audit data no longer adds empty keys to a scope file.
+
 ## 0.7.3 - 2026-10-31
 
 - **Workflow rules (policy) made understandable.** The browser's policy panel was raw JSON plus a dropdown of key names.

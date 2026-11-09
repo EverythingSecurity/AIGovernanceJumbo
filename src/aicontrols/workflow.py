@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
 from .library import Control, Library
-from .scope import DONE, STATUSES, Scope, ScopeError
+from .scope import DONE, STATUSES, Scope, ScopeError, round_half_up
 
 SPEC_FILE = Path(__file__).with_name("workflow_spec.json")
 WORKFLOW_SCHEMA_VERSION = "1.1"
@@ -137,11 +137,11 @@ class Workflow:
     # ---- state -------------------------------------------------------------------
     @property
     def _all(self) -> dict:
-        return self.scope.data.setdefault("workflow", {})
+        return self.scope.data.get("workflow") or {}      # reading never creates the key
 
     @property
     def audit_log(self) -> List[dict]:
-        return self.scope.data.setdefault("audit", [])
+        return self.scope.data.get("audit") or []         # reading never creates the key
 
     def sid(self, system_id: Optional[str]) -> str:
         return self.scope.system(system_id)["id"]
@@ -170,7 +170,7 @@ class Workflow:
         if sid in self._all:
             raise WorkflowError(f"workflow is already enabled for {sid!r}")
         now = _stamp()
-        self._all[sid] = {
+        self.scope.data.setdefault("workflow", {})[sid] = {
             "spec_version": self.spec["version"], "cycle": 1,
             "stage": self.spec["workflow"]["initialStage"], "entered": now, "stage_log": [],
             "attestations": {}, "profile": {}, "common_controls": {}, "measurements": [],
@@ -186,7 +186,7 @@ class Workflow:
 
     # ---- audit -----------------------------------------------------------------------
     def audit(self, system_id: str, actor: str, role: str, action: str, target: str, details: Optional[dict] = None) -> dict:
-        log = self.audit_log
+        log = self.scope.data.setdefault("audit", [])
         event = {"seq": len(log) + 1, "at": _stamp(), "actor": actor, "role": role, "action": action,
                  "system": system_id, "target": target, "details": details or {},
                  "prev": log[-1]["hash"] if log else GENESIS}
@@ -532,8 +532,8 @@ class Workflow:
             state = "partially_effective"
         else:
             state = "ineffective"
-        return {"state": state, "rate": round(rate, 3), "tested": len(window), "last_at": last["at"],
-                "age_days": round(age, 1)}
+        return {"state": state, "rate": round_half_up(rate, 3), "tested": len(window), "last_at": last["at"],
+                "age_days": round_half_up(age, 1)}
 
     def evaluate(self, system_id: Optional[str], actor: str, now: Optional[_dt.datetime] = None) -> dict:
         """Score every common control and check every indicator; record new threshold breaches."""
@@ -810,7 +810,7 @@ class Workflow:
                                       "controls_claiming_done": len(done)})
         result = {
             "as_of": today.isoformat(), "applicable": total, "at_target": met,
-            "percent": round(100 * met / total, 1) if total else None,
+            "percent": round_half_up(100 * met / total, 1) if total else None,
             "gaps": sorted(items, key=lambda i: ({"overdue": 0, "open": 1, "excepted": 2}[i["state"]], i["control_id"])),
             "assurance_gaps": assurance,
             "by_framework": {k: {"applicable": v[0], "at_target": v[1]} for k, v in sorted(by_fw.items())},

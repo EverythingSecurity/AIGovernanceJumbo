@@ -210,3 +210,8 @@ details.policy fieldset.rules legend { padding: 0 8px 0 0; font-weight: 700; fon
 .rule.changed .rule-text label::after { content: " • changed"; color: var(--accent); font-weight: 600; font-size: .78rem; }
 .saved.inline { display: inline; min-height: 0; margin: 0; }
 @media (max-width: 700px) { .rule { grid-template-columns: 1fr; } }
+.grc-life { list-style: none; padding: 0; margin: 8px 0 0; }
+.grc-life li { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.grc .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.grc textarea { font: inherit; width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); color: var(--text); }
+.grc select[multiple] { min-width: 14rem; }

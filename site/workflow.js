@@ -155,8 +155,8 @@
   }
 
   // ---- state access ------------------------------------------------------------------------
-  const all = (scope) => (scope.workflow = scope.workflow || {});
-  const auditLog = (scope) => (scope.audit = scope.audit || []);
+  const all = (scope) => scope.workflow || {};            // reading never creates the key
+  const auditLog = (scope) => scope.audit || [];          // reading never creates the key
   const sidOf = (scope, systemId) => S.system(scope, systemId).id;
   const enabled = (scope, systemId) => sidOf(scope, systemId) in all(scope);
   function state(scope, systemId) {
@@ -175,7 +175,7 @@
   }
 
   function audit(scope, sid, actor, role, action, target, details) {
-    const log = auditLog(scope);
+    const log = (scope.audit = scope.audit || []);
     const ev = { seq: log.length + 1, at: stamp(), actor, role, action, system: sid, target, details: details || {},
       prev: log.length ? log[log.length - 1].hash : GENESIS };
     ev.hash = eventHash(ev);
@@ -222,7 +222,7 @@
     const sid = sidOf(scope, systemId);
     actor = checkActor(actor);
     if (sid in all(scope)) throw new WorkflowError(`workflow is already enabled for '${sid}'`);
-    all(scope)[sid] = {
+    (scope.workflow = scope.workflow || {})[sid] = {
       spec_version: SPEC.version, cycle: 1, stage: SPEC.workflow.initialStage, entered: stamp(), stage_log: [],
       attestations: {}, profile: {}, common_controls: {}, measurements: [], escalations: [], exceptions: {}, policy: {},
       markers: { last_ingest_at: null, ccm_evaluated_at: null, gap_run_at: null, audit_verified_at: null, report_at: null },
@@ -977,7 +977,8 @@
     setTarget, targetOf, cc, members, ccAdd, ccMap, ccSuggest, ccApplySuggestions, unmapped, gapAccept, ccSet, tailor, indicatorAdd, ingest,
     effectiveness, evaluate, escalationAck, exceptionState, exceptionCovers, exceptionRequest, exceptionAssess, requiredApprover,
     exceptionApprove, exceptionReject, exceptionReopen, exceptionClose, exceptions, policySet, gapAnalysis, poam, report, reportMarkdown,
-    check, actions, attest, advance, restartCycle, verify, validate, parseDt };
+    check, actions, attest, advance, restartCycle, verify, validate, parseDt,
+    audit, checkActor, stamp, todayStr, rec };
   root.AIC = root.AIC || {};
   root.AIC.workflow = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

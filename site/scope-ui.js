@@ -59,6 +59,10 @@
       const wv = AIC.workflow.validate(parsed, data);
       errors.push(...wv.errors); warnings.push(...wv.warnings);
     }
+    if (!errors.length && AIC.grc && parsed.grc) {  // and the GRC layer (registers, links, settings)
+      const gv = AIC.grc.validate(parsed, data);
+      errors.push(...gv.errors); warnings.push(...gv.warnings);
+    }
     if (errors.length) {
       return say(`Cannot import: ${errors.length} problem(s). First: ${errors.slice(0, 3).join("; ")}`, "error");
     }
@@ -244,8 +248,8 @@
   }
   function subTabs() {
     return el("div", { class: "subtabs", role: "group", "aria-label": "Scope views" },
-      ["overview", "controls", "workflow", "export"].map((k) => el("button", { type: "button", "aria-pressed": String(ui.sub === k), onclick: () => { ui.sub = k; ui.open = null; render(); } },
-        { overview: "Overview & plan", controls: "Controls", workflow: "Workflow", export: "Export" }[k])));
+      ["overview", "controls", "workflow", "grc", "export"].map((k) => el("button", { type: "button", "aria-pressed": String(ui.sub === k), onclick: () => { ui.sub = k; ui.open = null; render(); } },
+        { overview: "Overview & plan", controls: "Controls", workflow: "Workflow", grc: "GRC", export: "Export" }[k])));
   }
 
   // ---- overview --------------------------------------------------------------------------
@@ -514,7 +518,7 @@
     if (ui.screen === "wizard" && ui.wiz) body = ui.wiz.phase === "form" ? wizardForm() : wizardResults();
     else if (ui.screen === "workspace" && scope && ui.sid) {
       body = [workspaceBar(), subTabs(), ui.sub === "overview" ? overviewPanel() : ui.sub === "controls" ? controlsPanel()
-        : ui.sub === "workflow" ? (AIC.workflowUI ? AIC.workflowUI.panel() : el("p", { class: "muted" }, "The workflow module did not load.")) : exportPanel()];
+        : ui.sub === "workflow" ? (AIC.workflowUI ? AIC.workflowUI.panel() : el("p", { class: "muted" }, "The workflow module did not load.")) : ui.sub === "grc" ? (AIC.grcUI ? AIC.grcUI.panel() : el("p", { class: "muted" }, "The GRC module did not load.")) : exportPanel()];
     } else body = introScreen();
     fill(root, msg, ui.report ? el("ul", { class: "report" }, ui.report.map((t) => el("li", {}, t))) : null, body);
   }
