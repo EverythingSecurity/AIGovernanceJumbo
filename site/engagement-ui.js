@@ -45,7 +45,7 @@
     return el("div", { class: "myrole" },
       el("label", {}, "My role", sel = el("select", { "aria-label": "Role to take" }, el("option", { value: "" }, "Choose a role…"),
         E.SPEC.roles.map((r) => el("option", { value: r.id }, r.name)))),
-      el("button", { type: "button", onclick: () => {
+      el("button", { type: "button", class: "primary", onclick: () => {
         const who = actor.trim();
         if (!sel.value) return ui().say("Choose a role first.", "error");
         if (!who) return ui().say("Type your name in “or type a name” first, then choose your role.", "error");

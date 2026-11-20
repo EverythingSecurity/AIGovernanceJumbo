@@ -167,7 +167,7 @@ function writeHash() {
 function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   for (const k of ["q", "fw", "dom", "cia", "id", "tab"]) state[k] = p.get(k) || "";
-  if (state.tab !== "heatmap" && state.tab !== "scope") state.tab = "";
+  if (state.tab !== "heatmap" && state.tab !== "scope" && state.tab !== "engagement") state.tab = "";
   if (state.fw && !fwById.has(state.fw)) state.fw = "";
   if (state.dom && !domById.has(state.dom)) state.dom = "";
   if (state.id && !byId.has(state.id)) state.id = "";
@@ -181,12 +181,11 @@ function setFilter(patch) { Object.assign(state, patch); syncInputs(); refresh()
 function select(id) { state.id = id; writeHash(); renderResults(); renderDetail(); $("detail").focus({ preventScroll: false }); }
 
 function showTab(name) {
-  state.tab = name === "heatmap" || name === "scope" ? name : "";
+  state.tab = name === "heatmap" || name === "scope" || name === "engagement" ? name : "";
   writeHash();
-  for (const t of ["explore", "heatmap", "scope"]) {
-    $(`tab-${t}`).setAttribute("aria-selected", String(t === name));
-    $(`view-${t}`).hidden = t !== name;
-  }
+  const shown = name === "engagement" ? "scope" : name;      // the engagement shares the scope panel
+  for (const t of ["explore", "heatmap", "scope", "engagement"]) $(`tab-${t}`).setAttribute("aria-selected", String(t === name));
+  for (const t of ["explore", "heatmap", "scope"]) $(`view-${t}`).hidden = t !== shown;
 }
 
 async function init() {
@@ -216,12 +215,14 @@ async function init() {
   $("more").addEventListener("click", () => { state.shown += PAGE; renderResults(); });
   $("tab-explore").addEventListener("click", () => showTab("explore"));
   $("tab-heatmap").addEventListener("click", () => showTab("heatmap"));
-  $("tab-scope").addEventListener("click", () => showTab("scope"));
+  $("tab-scope").addEventListener("click", () => { showTab("scope"); if (window.AIC && AIC.scopeUI && AIC.scopeUI.openScope) AIC.scopeUI.openScope(); });
+  $("tab-engagement").addEventListener("click", () => { showTab("engagement"); if (window.AIC && AIC.scopeUI && AIC.scopeUI.openEngagement) AIC.scopeUI.openEngagement(); });
   window.addEventListener("hashchange", () => { readHash(); syncInputs(); renderResults(); renderDetail(); showTab(state.tab || "explore"); });
 
   readHash(); syncInputs(); renderHeatmap(); renderResults(); renderDetail();
   $("status").hidden = true;
   showTab(state.tab || "explore");
   if (window.AIC && AIC.onData) AIC.onData({ controls, frameworks, domains, dataset_version: dsVersion });
+  if (state.tab === "engagement" && window.AIC && AIC.scopeUI && AIC.scopeUI.openEngagement) AIC.scopeUI.openEngagement();
 }
 init();

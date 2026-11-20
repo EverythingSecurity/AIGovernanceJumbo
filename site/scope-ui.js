@@ -533,6 +533,30 @@
       el("p", { class: "muted save" }, storageOk ? (dirty ? "Saved in this browser. You have changes not yet downloaded." : "Saved in this browser.")
         : "Your browser blocked local storage: changes are kept only until you close this tab. Download your scope file."));
   }
+  // The "Client engagement" top-level tab: straight to the engagement, or a start card when there is no scope yet.
+  function openEngagement() {
+    ui.screen = scope ? "engagement" : "engagement_start"; ui.wiz = null; say(null); render();
+  }
+  // The "My scope" tab: leave the engagement screens and show the workspace (or the intro).
+  function openScope() {
+    if (ui.screen === "engagement" || ui.screen === "engagement_start") ui.screen = scope && scope.systems.length ? "workspace" : "intro";
+    if (ui.screen === "workspace" && !ui.sid && scope) ui.sid = scope.systems[0].id;
+    render();
+  }
+  function engagementStartCard() {
+    let org;
+    return el("div", { class: "card intro" }, el("h2", {}, "Client engagement"),
+      el("p", {}, "Onboard a client, send the scoping questionnaire, get framework recommendations, assign roles, and hand each framework's questionnaire to the client's collaborators. Everything stays in this browser; download the file to share it."),
+      el("label", {}, "Client organisation", org = el("input", { placeholder: "e.g. Acme Bank", autocomplete: "organization" })),
+      el("div", { class: "row" },
+        el("button", { type: "button", class: "primary", onclick: () => {
+          const name = org.value.trim();
+          if (!name) return say("Enter the client's name.", "error");
+          scope = S.newScope(name, data); ui.sid = null; ui.screen = "engagement"; persist(); dirty = false;
+          say(`Started an engagement for “${name}”. Next: complete the client profile and take your role.`, "ok"); render();
+        } }, "Start the engagement"),
+        el("button", { type: "button", class: "ghost", onclick: pickFile }, "Import a scope file")));
+  }
   function startEngagement() {
     if (scope && !confirm("This replaces the scope currently in this browser. Download it first if you want to keep it. Continue?")) return;
     const name = (prompt("Client organisation name:") || "").trim();
@@ -548,6 +572,7 @@
     let body;
     if (ui.screen === "wizard" && ui.wiz) body = ui.wiz.phase === "form" ? wizardForm() : wizardResults();
     else if (ui.screen === "engagement" && scope) body = [engagementBar(), engagementPanel()];
+    else if (ui.screen === "engagement_start") body = engagementStartCard();
     else if (ui.screen === "workspace" && scope && ui.sid) {
       body = [workspaceBar(), subTabs(), ui.sub === "overview" ? overviewPanel() : ui.sub === "controls" ? controlsPanel()
         : ui.sub === "workflow" ? (AIC.workflowUI ? AIC.workflowUI.panel() : el("p", { class: "muted" }, "The workflow module did not load.")) : ui.sub === "grc" ? (AIC.grcUI ? AIC.grcUI.panel() : el("p", { class: "muted" }, "The GRC module did not load."))
@@ -559,7 +584,7 @@
   // What the workflow screens (workflow-ui.js) may use. Reads current state through getters.
   AIC.scopeUI = {
     get scope() { return scope; }, get data() { return data; }, get sid() { return ui.sid; },
-    persist, say, render, attempt, download, slug, fwName, downloadScopeFile,
+    persist, say, render, attempt, download, slug, fwName, downloadScopeFile, openEngagement, openScope,
   };
 
   AIC.onData = function (d) {
