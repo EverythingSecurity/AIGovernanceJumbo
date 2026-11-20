@@ -499,6 +499,122 @@
       "weight": 75,
       "rationale": "A customer contract mandates this standard."
     }
+  ],
+  "actions": {
+    "client_set": "edit the client profile",
+    "onboard": "onboard the client",
+    "rules_edit": "change applicability rules",
+    "roles_set": "assign engagement roles",
+    "scoping_answer": "answer scoping questions",
+    "scoping_delegate": "delegate scoping questions",
+    "scoping_submit": "submit the scoping answers",
+    "scoping_reopen": "reopen the scoping answers",
+    "recommend": "run the framework recommendations",
+    "review": "review recommended frameworks",
+    "finalise": "finalise the framework set",
+    "reopen_assignment": "reopen the framework set",
+    "package_assign": "assign a framework questionnaire to collaborators",
+    "package_respond": "answer framework questions",
+    "package_submit_items": "submit answers for review",
+    "package_review": "approve or return submitted answers",
+    "package_submit": "submit a framework questionnaire",
+    "package_return": "return a submitted questionnaire for correction"
+  },
+  "roles": [
+    {
+      "id": "admin",
+      "name": "Engagement admin",
+      "description": "Everything, including the client profile, rules and roles.",
+      "can": [
+        "client_set",
+        "onboard",
+        "rules_edit",
+        "roles_set",
+        "scoping_answer",
+        "scoping_delegate",
+        "scoping_submit",
+        "scoping_reopen",
+        "recommend",
+        "review",
+        "finalise",
+        "reopen_assignment",
+        "package_assign",
+        "package_respond",
+        "package_submit_items",
+        "package_review",
+        "package_submit",
+        "package_return"
+      ],
+      "own": []
+    },
+    {
+      "id": "scoping_lead",
+      "name": "Scoping lead",
+      "description": "Runs the scoping questionnaire, recommends and finalises frameworks, and hands each framework's questionnaire to client collaborators. Cannot change rules, the client profile or roles.",
+      "can": [
+        "scoping_answer",
+        "scoping_delegate",
+        "scoping_submit",
+        "scoping_reopen",
+        "recommend",
+        "review",
+        "finalise",
+        "reopen_assignment",
+        "package_assign",
+        "package_review"
+      ],
+      "own": []
+    },
+    {
+      "id": "assessor",
+      "name": "Assessor",
+      "description": "Reviews recommendations and submitted answers, and can return a submitted questionnaire. Cannot assign frameworks.",
+      "can": [
+        "review",
+        "package_review",
+        "package_return"
+      ],
+      "own": []
+    },
+    {
+      "id": "contributor",
+      "name": "Client contributor",
+      "description": "The client's single point of contact: completes scoping, assigns questionnaires to colleagues, reviews and submits. The name on the client profile counts as a contributor.",
+      "can": [
+        "scoping_answer",
+        "scoping_delegate",
+        "scoping_submit",
+        "package_assign",
+        "package_respond",
+        "package_submit_items",
+        "package_review",
+        "package_submit"
+      ],
+      "own": []
+    },
+    {
+      "id": "collaborator",
+      "name": "Client collaborator",
+      "description": "Answers only the scoping questions and framework domains assigned to them.",
+      "can": [],
+      "own": [
+        "scoping_answer",
+        "package_respond",
+        "package_submit_items"
+      ]
+    }
+  ],
+  "answers": [
+    "implemented",
+    "partially_implemented",
+    "not_implemented",
+    "not_applicable"
+  ],
+  "item_statuses": [
+    "in_progress",
+    "submitted",
+    "returned",
+    "approved"
   ]
 };
   root.AIC = root.AIC || {};

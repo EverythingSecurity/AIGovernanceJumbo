@@ -188,6 +188,130 @@ def cmd_rule_toggle(disable: bool):
     return run
 
 
+# ---- roles ------------------------------------------------------------------------------------------------
+def cmd_roles_list(lib, a) -> int:
+    scope, e = _open(lib, a)
+    print("roles are enforced" if e.enforced() else "roles are not set: anyone may do anything. Start with: engagement roles set admin NAME")
+    for r in e.roles():
+        print(f"{r['id']:<13} {r['name']:<20} {_show(r['people'])}")
+        print(f"    {r['description']}")
+    return 0
+
+
+def cmd_roles_set(lib, a) -> int:
+    scope, e = _open(lib, a)
+    out = e.set_roles(_actor(a), a.role, a.names)
+    scope.save(a.file)
+    print(f"{a.role}: {_show(out['names'])}" + ("" if not out["enforced"] else "  (roles are now enforced)"))
+    return 0
+
+
+# ---- framework questionnaires -----------------------------------------------------------------------------
+def _domain(lib: Library, key):
+    if key is None:
+        return None
+    try:
+        return lib.domain(key).id
+    except KeyError:
+        raise EngagementError(f"unknown domain {key!r}; see: aicontrols domains") from None
+
+
+def cmd_packages(lib, a) -> int:
+    scope, e = _open(lib, a)
+    if a.framework:
+        pr = e.package_progress(a.framework)
+        print(f"{a.framework}: {pr['status']}, {pr['approved']} of {pr['total']} approved, {pr['answered']} answered")
+        for r in pr["domains"]:
+            late = "  OVERDUE" if r["overdue"] else ""
+            print(f"  {r['domain'][:52]:<52} {r['answered']:>3}/{r['total']:<3} approved {r['approved']:<3} -> {_show(r['assigned_to'])}"
+                  f"{' due ' + r['due'] if r['due'] else ''}{late}")
+        return 0
+    rows = e.packages_overview()
+    for r in rows:
+        print(f"{r['framework']:<14} {r['status']:<10} {r['approved']:>4} of {r['total']:<4} approved, {r['answered']} answered")
+    if not rows:
+        print("no questionnaires yet: they are created when the framework set is finalised")
+    return 0
+
+
+def cmd_pkg_assign(lib, a) -> int:
+    scope, e = _open(lib, a)
+    out = e.package_assign(_actor(a), a.framework, a.to, a.due, _domain(lib, a.domain))
+    scope.save(a.file)
+    print(f"{a.framework}: {len(out['domains'])} domain(s) assigned to {out['to']}" + (f", due {out['due']}" if out["due"] else ""))
+    return 0
+
+
+def cmd_pkg_questions(lib, a) -> int:
+    scope, e = _open(lib, a)
+    last = None
+    for q in e.package_questions(a.framework, _domain(lib, a.domain)):
+        r = q["response"]
+        if a.unanswered and r:
+            continue
+        if q["domain"] != last:
+            print(f"\n{q['domain']}")
+            last = q["domain"]
+        print(f"  {q['control_id']}  {q['title']}")
+        if r:
+            print(f"      {r['answer']} [{r['status']}] by {r['by']}" + (f": {r['comment']}" if r["comment"] else ""))
+    return 0
+
+
+def cmd_pkg_answer(lib, a) -> int:
+    scope, e = _open(lib, a)
+    out = e.respond(_actor(a), a.framework, a.control, a.answer, a.comment or "", a.evidence or [], a.shared)
+    scope.save(a.file)
+    print(f"{a.control}: {out['answer']}" + (f" (also applied to {out['shared_to']} related control(s))" if out["shared_to"] else ""))
+    return 0
+
+
+def cmd_pkg_submit_items(lib, a) -> int:
+    scope, e = _open(lib, a)
+    out = e.submit_items(_actor(a), a.framework, _domain(lib, a.domain))
+    scope.save(a.file)
+    print(f"{out['submitted']} answer(s) submitted for review")
+    return 0
+
+
+def cmd_pkg_review(lib, a) -> int:
+    scope, e = _open(lib, a)
+    out = e.review_items(_actor(a), a.framework, _domain(lib, a.domain), a.action, a.note or "")
+    scope.save(a.file)
+    print(f"{out['count']} answer(s) {'approved' if a.action == 'approve' else 'returned'}")
+    return 0
+
+
+def cmd_pkg_submit(lib, a) -> int:
+    scope, e = _open(lib, a)
+    e.submit_package(_actor(a), a.framework)
+    scope.save(a.file)
+    print(f"{a.framework} questionnaire submitted and locked")
+    return 0
+
+
+def cmd_pkg_return(lib, a) -> int:
+    scope, e = _open(lib, a)
+    e.return_package(_actor(a), a.framework, a.reason)
+    scope.save(a.file)
+    print(f"{a.framework} questionnaire returned for correction")
+    return 0
+
+
+def cmd_tasks(lib, a) -> int:
+    scope, e = _open(lib, a)
+    rows = e.my_tasks(a.name)
+    for t in rows:
+        due = f", due {t['due']}" if t["due"] else ""
+        if t["kind"] == "scoping":
+            print(f"scoping question {t['question']}{due}")
+        else:
+            print(f"{t['framework']}: {t['domain']} ({t['remaining']} unanswered){due}")
+    if not rows:
+        print(f"nothing assigned to {a.name}")
+    return 0
+
+
 def add_parser(sub) -> None:
     spec = load_spec()
     ep = sub.add_parser("engagement", help="client engagement: onboarding, scoping questionnaire, framework recommendations, review")
@@ -234,3 +358,32 @@ def add_parser(sub) -> None:
     p.add_argument("rule_file")
     p = add(rs, "disable", cmd_rule_toggle(True), "disable a rule"); p.add_argument("rule")
     p = add(rs, "enable", cmd_rule_toggle(False), "enable a rule"); p.add_argument("rule")
+
+    rl = g.add_parser("roles", help="who holds which engagement role (enforced once anyone holds one)")
+    rls = rl.add_subparsers(dest="roles_command", required=True)
+    add(rls, "list", cmd_roles_list, "show roles and who holds them")
+    p = add(rls, "set", cmd_roles_set, "set the people holding a role (replaces the list; the first role set must be admin)")
+    p.add_argument("role", choices=[r["id"] for r in spec["roles"]]); p.add_argument("names", nargs="*")
+
+    p = add(g, "packages", cmd_packages, "framework questionnaires and their progress")
+    p.add_argument("framework", nargs="?")
+    pk = g.add_parser("package", help="a framework questionnaire: assign, answer, submit, review")
+    ps = pk.add_subparsers(dest="package_command", required=True)
+    p = add(ps, "assign", cmd_pkg_assign, "assign a questionnaire (or one domain) to a collaborator")
+    p.add_argument("framework"); p.add_argument("--to", required=True); p.add_argument("--due"); p.add_argument("--domain")
+    p = add(ps, "questions", cmd_pkg_questions, "list the questions and answers")
+    p.add_argument("framework"); p.add_argument("--domain"); p.add_argument("--unanswered", action="store_true")
+    p = add(ps, "answer", cmd_pkg_answer, "answer one question")
+    p.add_argument("framework"); p.add_argument("control"); p.add_argument("answer", choices=spec["answers"])
+    p.add_argument("--comment"); p.add_argument("--evidence", nargs="*", help="document titles or links")
+    p.add_argument("--shared", action="store_true", help="also apply to the same domain in other questionnaires")
+    p = add(ps, "submit-items", cmd_pkg_submit_items, "submit a domain's answers for review")
+    p.add_argument("framework"); p.add_argument("--domain", required=True)
+    p = add(ps, "review", cmd_pkg_review, "approve or return a domain's submitted answers")
+    p.add_argument("framework"); p.add_argument("--domain", required=True); p.add_argument("action", choices=["approve", "return"]); p.add_argument("--note")
+    p = add(ps, "submit", cmd_pkg_submit, "submit the whole questionnaire (all answers approved) and lock it")
+    p.add_argument("framework")
+    p = add(ps, "return", cmd_pkg_return, "return a submitted questionnaire for correction")
+    p.add_argument("framework"); p.add_argument("--reason", required=True)
+    p = add(g, "tasks", cmd_tasks, "what is assigned to a person")
+    p.add_argument("name")

@@ -5,7 +5,7 @@
 (function () {
   const E = AIC.engagement;
   const ACTOR_KEY = "aicontrols.actor.v1";
-  const eui = { view: "client", reason: {}, addFw: "", addReason: "", finReason: "", ruleText: "", ruleMsg: null };
+  const eui = { view: "client", reason: {}, addFw: "", addReason: "", finReason: "", ruleText: "", ruleMsg: null, draft: {}, open: new Set(), mine: false, assign: {} };
   let actor = "";
   try { actor = localStorage.getItem(ACTOR_KEY) || ""; } catch (e) { /* storage may be blocked */ }
 
@@ -13,8 +13,10 @@
   const scope = () => ui().scope, data = () => ui().data;
   const human = (s) => String(s).replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
   const fwName = (id) => { const f = data().frameworks.find((x) => x.id === id); return f ? f.name : id; };
-  const TABS = [["client", "Client"], ["scoping", "Scoping questionnaire"], ["recs", "Recommendations & review"], ["rules", "Applicability rules"]];
+  const TABS = [["client", "Client"], ["scoping", "Scoping questionnaire"], ["recs", "Recommendations & review"], ["packages", "Framework questionnaires"], ["roles", "Roles"], ["rules", "Applicability rules"]];
   const STAGES = [["onboarding", "Onboard the client"], ["scoping", "Complete scoping"], ["recommendation", "Run recommendations"], ["review", "Review and finalise"], ["assigned", "Frameworks assigned"]];
+  const domName = (id) => { const d = data().domains.find((x) => x.id === id); return d ? d.name : id; };
+  const ANSWER_LABEL = { implemented: "Implemented", partially_implemented: "Partially implemented", not_implemented: "Not implemented", not_applicable: "Not applicable" };
 
   function act(fn, ok) {
     const a = actor.trim();
@@ -155,7 +157,107 @@
     fin ? null : el("div", { class: "card" }, el("h3", {}, "Finalise"),
       el("p", { class: "muted" }, `Every recommendation must be accepted or removed first. The applicable set would be: ${E.applicableFrameworks(S).map(fwName).join(", ") || "none"}.`),
       el("label", {}, "Note (optional)", el("input", { value: eui.finReason, oninput: (ev) => { eui.finReason = ev.target.value; } })),
-      el("button", { type: "button", class: "primary", onclick: () => act((a) => E.finalise(scope(), a, eui.finReason), "Framework set finalised.") }, "Finalise applicable frameworks"))];
+      el("button", { type: "button", class: "primary", onclick: () => act((a) => E.finalise(scope(), data(), a, eui.finReason), "Framework set finalised. The framework questionnaires are ready to assign.") }, "Finalise applicable frameworks"))];
+  }
+
+  // ---- roles ----------------------------------------------------------------------------------
+  function rolesView() {
+    const S = scope();
+    if (!E.enabled(S)) return el("div", { class: "card" }, el("p", {}, "Save the client profile first (Client tab), then assign roles."));
+    const on = E.enforced(S), mine = actor.trim() ? E.rolesOf(S, actor.trim()) : [];
+    return [el("div", { class: "card" }, el("h3", {}, on ? "Roles are enforced" : "Roles are not set yet"),
+      el("p", { class: "muted" }, on
+        ? "An action is refused unless the person named in “Acting as” holds a role that allows it. This checks the name you type; nothing proves who you are, so it guards against mistakes, not against someone typing another name."
+        : "Until someone holds a role, anyone can do anything. Start by naming an engagement admin: from then on roles are enforced and only an admin can change them."),
+      actor.trim() ? el("p", {}, `Acting as ${actor.trim()}: ${mine.length ? mine.map(human).join(", ") : "no role"}.`) : null),
+    ...E.roles(S).map((r) => {
+      let box;
+      return el("div", { class: "card" }, el("h3", {}, r.name), el("p", { class: "muted" }, r.description),
+        el("label", {}, "People (comma separated)", box = el("input", { value: r.people.join(", "), placeholder: "names" })),
+        el("button", { type: "button", class: "primary", onclick: () => act((a) => E.setRoles(scope(), a, r.id, box.value.split(",").map((x) => x.trim()).filter(Boolean)), `${r.name}: saved.`) }, "Save"));
+    })];
+  }
+
+  // ---- framework questionnaires ---------------------------------------------------------------
+  function draftOf(fw, q) {
+    const k = `${fw}:${q.control_id}`;
+    if (!eui.draft[k]) {
+      const r = q.response;
+      eui.draft[k] = { answer: r ? r.answer : "", comment: r ? r.comment : "", evidence: r ? r.evidence.join(", ") : "", shared: false };
+    }
+    return eui.draft[k];
+  }
+  function questionRow(fw, q, locked) {
+    const r = q.response, d = draftOf(fw, q);
+    const frozen = locked || (r && (r.status === "submitted" || r.status === "approved"));
+    return el("div", { class: "question" },
+      el("p", {}, el("strong", {}, `${q.ref} `), q.title, " ", r ? el("span", { class: `state ${r.status === "approved" ? "approved" : r.status === "returned" ? "rejected" : r.status === "submitted" ? "assessed" : "requested"}` }, human(r.status)) : null),
+      el("details", {}, el("summary", {}, "Requirement"), el("p", { class: "muted" }, q.requirement || "")),
+      r && r.review && r.review.note ? el("p", { class: "muted" }, `Reviewer (${r.review.by}): ${r.review.note}`) : null,
+      r && r.shared_from ? el("p", { class: "muted" }, `Copied from ${r.shared_from}`) : null,
+      el("div", { class: "row" },
+        el("label", {}, "Answer", el("select", { disabled: frozen ? "" : null, "aria-label": `Answer for ${q.ref}`, onchange: (e) => { d.answer = e.target.value; } },
+          el("option", { value: "" }, "Choose…"), E.SPEC.answers.map((a) => el("option", { value: a, selected: d.answer === a }, ANSWER_LABEL[a])))),
+        el("label", {}, "Comment", el("input", { value: d.comment, disabled: frozen ? "" : null, "aria-label": `Comment for ${q.ref}`, oninput: (e) => { d.comment = e.target.value; } })),
+        el("label", {}, "Evidence (titles or links, comma separated)", el("input", { value: d.evidence, disabled: frozen ? "" : null, "aria-label": `Evidence for ${q.ref}`, oninput: (e) => { d.evidence = e.target.value; } }))),
+      frozen ? null : el("div", { class: "row" },
+        el("label", { class: "inline" }, el("input", { type: "checkbox", onchange: (e) => { d.shared = e.target.checked; } }), "Also apply to the same domain in other frameworks"),
+        el("button", { type: "button", onclick: () => {
+          const ev = d.evidence.split(",").map((x) => x.trim()).filter(Boolean);
+          act((a) => E.respond(scope(), data(), a, fw, q.control_id, d.answer, d.comment, ev, d.shared), (o) => `${q.ref}: saved${o.shared_to ? `, also applied to ${o.shared_to} related question(s)` : ""}.`);
+        } }, "Save answer")));
+  }
+  function domainBlock(fw, p, row) {
+    const S = scope(), D = data();
+    const key = `${fw}|${row.domain}`;
+    const qs = E.packageQuestions(S, D, fw, row.domain);
+    const locked = p.status === "submitted";
+    const status = `${row.answered}/${row.total} answered, ${row.submitted} awaiting review, ${row.approved} approved`;
+    let to, due;
+    return el("details", { class: "card", open: eui.open.has(key) ? "" : null, ontoggle: (e) => { if (e.target.open) eui.open.add(key); else eui.open.delete(key); } },
+      el("summary", {}, el("strong", {}, domName(row.domain)), ` — ${status}`, row.assigned_to ? ` — ${row.assigned_to}${row.due ? `, due ${row.due}` : ""}` : " — not assigned",
+        row.overdue ? el("span", { class: "state overdue" }, "Overdue") : null),
+      locked ? null : el("div", { class: "row" },
+        el("label", {}, "Assign to", to = el("input", { value: row.assigned_to || "", placeholder: "collaborator name" })),
+        el("label", {}, "Due", due = el("input", { type: "date", value: row.due || "" })),
+        el("button", { type: "button", onclick: () => act((a) => E.packageAssign(scope(), data(), a, fw, to.value, due.value || null, row.domain), "Domain assigned.") }, "Assign domain"),
+        el("button", { type: "button", onclick: () => act((a) => E.submitItems(scope(), data(), a, fw, row.domain), (o) => `${o.submitted} answer(s) submitted for review.`) }, "Submit answers for review"),
+        el("button", { type: "button", onclick: () => act((a) => E.reviewItems(scope(), data(), a, fw, row.domain, "approve", ""), (o) => `${o.count} answer(s) approved.`) }, "Approve submitted"),
+        el("button", { type: "button", class: "ghost", onclick: () => {
+          const note = prompt("What needs correcting?");
+          if (note !== null) act((a) => E.reviewItems(scope(), data(), a, fw, row.domain, "return", note), (o) => `${o.count} answer(s) returned.`);
+        } }, "Return submitted")),
+      qs.map((q) => questionRow(fw, q, locked)));
+  }
+  function packagesView() {
+    const S = scope();
+    const e = S.engagement;
+    if (!E.enabled(S) || !e.applicable) return el("div", { class: "card" }, el("p", {}, "Finalise the framework set first (Recommendations & review). Each finalised framework then gets a questionnaire with one question per control."));
+    const D = data();
+    const fws = Object.keys(e.packages).sort();
+    const tasks = actor.trim() ? E.myTasks(S, D, actor.trim()).filter((t) => t.kind === "package") : [];
+    const mineSet = new Set(tasks.map((t) => `${t.framework}|${t.domain}`));
+    const head = el("div", { class: "card" }, el("h3", {}, "Framework questionnaires"),
+      el("p", { class: "muted" }, "One question per control of each finalised framework, grouped by domain. Hand a whole questionnaire, or one domain at a time, to a client collaborator. They answer with evidence references, submit for review, and a reviewer approves or returns. When every answer is approved the contributor submits the questionnaire, which locks it."),
+      el("label", { class: "inline" }, el("input", { type: "checkbox", checked: eui.mine ? "" : null, onchange: (ev) => { eui.mine = ev.target.checked; ui().render(); } }),
+        actor.trim() ? `Show only what is assigned to ${actor.trim()}` : "Show only what is assigned to me (enter your name above)"),
+      eui.mine ? el("p", { class: "muted" }, `${tasks.length} task(s) for ${actor.trim() || "you"}.`) : null);
+    return [head, ...fws.map((fw) => {
+      const p = e.packages[fw], pr = E.packageProgress(S, D, fw);
+      const a = eui.assign[fw] || (eui.assign[fw] = { to: "", due: "" });
+      const rows = pr.domains.filter((r) => !eui.mine || mineSet.has(`${fw}|${r.domain}`));
+      return el("div", {}, el("div", { class: "card" }, el("h3", {}, fwName(fw), " ", el("span", { class: `state ${p.status === "submitted" ? "approved" : "requested"}` }, p.status === "submitted" ? "Submitted and locked" : "Open")),
+        el("p", { class: "muted" }, `${pr.approved} of ${pr.total} approved, ${pr.answered} answered, across ${pr.domains.length} domain(s).`),
+        p.status === "submitted" ? el("div", { class: "row" }, el("button", { type: "button", class: "ghost", onclick: () => {
+          const why = prompt("Reason for returning this questionnaire:");
+          if (why !== null) act((x) => E.returnPackage(scope(), x, fw, why), "Questionnaire returned for correction.");
+        } }, "Return for correction")) : el("div", { class: "row" },
+          el("label", {}, "Assign the whole questionnaire to", el("input", { value: a.to, placeholder: "collaborator name", oninput: (ev) => { a.to = ev.target.value; } })),
+          el("label", {}, "Due", el("input", { type: "date", value: a.due, oninput: (ev) => { a.due = ev.target.value; } })),
+          el("button", { type: "button", onclick: () => act((x) => E.packageAssign(scope(), data(), x, fw, a.to, a.due || null, null), `Every domain of ${fwName(fw)} assigned.`) }, "Assign all domains"),
+          el("button", { type: "button", class: "primary", onclick: () => act((x) => E.submitPackage(scope(), x, fw), "Questionnaire submitted and locked.") }, "Submit questionnaire"))),
+        rows.map((r) => domainBlock(fw, p, r)));
+    })];
   }
 
   // ---- rules ----------------------------------------------------------------------------------
@@ -185,7 +287,7 @@
   }
 
   function panel() {
-    const body = { client: clientView, scoping: scopingView, recs: recsView, rules: rulesView }[eui.view]();
+    const body = { client: clientView, scoping: scopingView, recs: recsView, packages: packagesView, roles: rolesView, rules: rulesView }[eui.view]();
     return el("div", { class: "eng" },
       el("div", { class: "card actorbar" }, actorField(), el("p", { class: "muted" }, "Offline engagement file: names are labels you type and nothing authenticates them. A planning aid, not legal advice.")),
       stageBar(), tabs(), body);

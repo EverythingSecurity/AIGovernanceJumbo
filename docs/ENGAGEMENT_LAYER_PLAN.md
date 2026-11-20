@@ -1,6 +1,6 @@
 # Engagement layer: plan and conflicts
 
-Status: decided. Offline engagement file, phases 2 to 5, built one phase at a time. Phase 2 (scoping, rules, recommendations, review and assignment) is done; see ENGAGEMENT.md. The engagement is stored inside the client's scope file (one scope file per client), which reuses the audit chain, validation, import and browser storage.
+Status: decided. Offline engagement file, phases 2 to 5, built one phase at a time. Phase 2 (scoping, rules, recommendations, review and assignment), roles, and the first half of phase 3 (framework questionnaires, assignment to collaborators, answers with evidence references, review, submit and lock) are done; see ENGAGEMENT.md. The engagement is stored inside the client's scope file (one scope file per client), which reuses the audit chain, validation, import and browser storage.
 
 ## What the repository is today
 

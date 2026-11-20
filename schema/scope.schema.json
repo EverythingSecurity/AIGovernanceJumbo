@@ -430,6 +430,139 @@
             "object",
             "null"
           ]
+        },
+        "roles": {
+          "type": "object",
+          "description": "Who holds each engagement role (names are labels). Roles are enforced once anyone holds one.",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "packages": {
+          "type": "object",
+          "description": "One questionnaire per finalised framework, built from the library's controls.",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "framework",
+              "status",
+              "controls",
+              "assignments",
+              "responses"
+            ],
+            "properties": {
+              "framework": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "open",
+                  "submitted"
+                ]
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "controls": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "assignments": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "required": [
+                    "to"
+                  ],
+                  "properties": {
+                    "to": {
+                      "type": "string"
+                    },
+                    "due": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "by": {
+                      "type": "string"
+                    },
+                    "at": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "required": [
+                    "answer",
+                    "status",
+                    "by",
+                    "at"
+                  ],
+                  "properties": {
+                    "answer": {
+                      "enum": [
+                        "implemented",
+                        "partially_implemented",
+                        "not_implemented",
+                        "not_applicable"
+                      ]
+                    },
+                    "comment": {
+                      "type": "string"
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "status": {
+                      "enum": [
+                        "in_progress",
+                        "submitted",
+                        "returned",
+                        "approved"
+                      ]
+                    },
+                    "by": {
+                      "type": "string"
+                    },
+                    "at": {
+                      "type": "string"
+                    },
+                    "shared_from": {
+                      "type": "string"
+                    },
+                    "review": {
+                      "type": "object"
+                    }
+                  }
+                }
+              },
+              "submitted_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "submitted_by": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
         }
       }
     }

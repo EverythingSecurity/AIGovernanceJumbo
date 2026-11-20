@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.10.0 - 2026-11-20
+
+- **Engagement roles**: engagement admin, scoping lead, assessor, client contributor and client collaborator, with a permission
+  table kept as data. Roles are checked by name once anyone holds one (the first role set must be admin); collaborators can
+  act only on the scoping questions and framework domains assigned to them. Names are labels, not logins: this prevents
+  mistakes, not deliberate impersonation.
+- **Framework questionnaires**: finalising the framework set creates one questionnaire per framework with one question per
+  library control. Assign a whole questionnaire or a single domain to a client collaborator with a due date; collaborators
+  answer with evidence references and submit for review; reviewers approve or return; the contributor submits and locks it;
+  only an assessor or admin can return it. Optional "apply to the same domain in other frameworks". Overdue and "my tasks"
+  views. `aicontrols engagement roles | packages | package | tasks` and two new views in the browser.
+- Python and browser engines checked against each other on a 130-step scenario (audit hash chain included).
+- `finalise` in the browser engine now takes the dataset, to build the questionnaires.
+
 ## 0.9.0 - 2026-11-20
 
 - **Client engagement layer, phase 2** (new): onboard a client, run a scoping questionnaire (25 questions, eight domains,

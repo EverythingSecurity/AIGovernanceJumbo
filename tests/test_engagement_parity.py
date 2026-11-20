@@ -210,3 +210,183 @@ def test_validation_of_corrupted_engagement_data_matches_python(tmp_path, lib, m
         got = node(tmp_path, {"mode": "wfops", "scope": copy.deepcopy(case), "ops": [{"op": "eng_validate"}]})["results"][0]["ok"]
         assert sorted(got["errors"]) == sorted(errs) and got["warnings"] == warns
     assert errs == []
+
+
+# ---- roles and framework questionnaires ----------------------------------------------------------------------------
+def roles_scenario(lib):
+    A, SAM, ANN, CLEO, CARL, DINA = "ada", "sam", "ann", "cleo", "carl", "dina"
+    nist = [c for c in lib.filter(framework="nist-ai-rmf")]
+    owasp = [c for c in lib.filter(framework="owasp-llm")]
+    dom_gov = "governance-policy-leadership"
+    dom_tp = "third-party-supplier-ai-supply-chain"
+    gov = [c.id for c in nist if c.domain_id == dom_gov]
+    tp_nist = [c.id for c in nist if c.domain_id == dom_tp]
+    o = []
+    add = o.append
+    add({"op": "clock", "iso": "2026-11-20T09:00:00Z"})
+    add({"op": "eng_roles_set", "by": "pam", "role": "admin", "names": [A]})                  # engagement not started
+    add({"op": "eng_client", "by": "pam", "fields": {"name": "Acme Bank", "sector": "banking", "country": "Qatar", "size": "large", "contributor": "Dina"}})
+    add({"op": "eng_onboard", "by": "pam"})
+    add({"op": "eng_roles_set", "by": "pam", "role": "wizard", "names": ["x"]})
+    add({"op": "eng_roles_set", "by": "pam", "role": "admin", "names": [" "]})
+    add({"op": "eng_roles_set", "by": "pam", "role": "scoping_lead", "names": [SAM]})        # an admin must come first
+    add({"op": "eng_roles_set", "by": "pam", "role": "admin", "names": [A, " ADA ", "Bo"]})
+    add({"op": "eng_roles_set", "by": A, "role": "scoping_lead", "names": [SAM]})
+    add({"op": "eng_roles_set", "by": A, "role": "assessor", "names": [ANN]})
+    add({"op": "eng_roles_set", "by": A, "role": "collaborator", "names": [CLEO, CARL]})
+    add({"op": "eng_roles_set", "by": SAM, "role": "assessor", "names": ["x"]})              # only an admin
+    add({"op": "eng_roles_set", "by": A, "role": "admin", "names": []})                      # last admin
+    add({"op": "eng_roles_list"})
+    # permissions on the engagement
+    add({"op": "eng_client", "by": "stranger", "fields": {"country": "Qatar"}})
+    add({"op": "eng_client", "by": SAM, "fields": {"country": "Qatar"}})
+    add({"op": "eng_client", "by": A, "fields": {"country": "Qatar"}})
+    add({"op": "eng_rule_disable", "by": SAM, "rule": "R-DATAGOV"})
+    add({"op": "eng_rule_disable", "by": A, "rule": "R-DATAGOV"})
+    add({"op": "eng_delegate", "by": CLEO, "q": "d_volume", "to": CLEO})                      # collaborators cannot delegate
+    add({"op": "eng_delegate", "by": DINA, "q": "d_volume", "to": CLEO, "due": "2026-12-01"})
+    add({"op": "eng_answer", "by": CARL, "q": "d_volume", "value": "large"})                  # not assigned to carl
+    add({"op": "eng_answer", "by": CLEO, "q": "o_size", "value": "large"})                    # not assigned to cleo
+    add({"op": "eng_answer", "by": CLEO, "q": "d_volume", "value": "large"})
+    add({"op": "eng_answer", "by": ANN, "q": "o_size", "value": "large"})                     # assessors do not answer scoping
+    rest = {k: v for k, v in FULL.items() if k != "d_volume"}
+    for q, v in rest.items():
+        add({"op": "eng_answer", "by": DINA, "q": q, "value": v})
+    add({"op": "eng_submit", "by": CLEO})
+    add({"op": "eng_submit", "by": SAM})
+    add({"op": "eng_recommend", "by": DINA})
+    add({"op": "eng_recommend", "by": SAM})
+    add({"op": "eng_review", "by": DINA, "framework": "gdpr", "action": "accept"})
+    add({"op": "eng_review", "by": ANN, "framework": "nist-ai-rmf", "action": "accept"})
+    for fw in ("eu-ai-act", "gdpr", "iso-42001", "iso-27001"):
+        add({"op": "eng_review", "by": SAM, "framework": fw, "action": "remove", "reason": "Out of scope for this engagement"})
+    add({"op": "eng_review", "by": SAM, "framework": "owasp-llm", "action": "add", "reason": "Client ships an LLM chatbot"})
+    add({"op": "eng_finalise", "by": ANN})
+    add({"op": "eng_pkg_overview"})
+    add({"op": "eng_finalise", "by": SAM, "reason": "Agreed with client"})
+    add({"op": "eng_pkg_overview"})
+    # handing questionnaires to collaborators
+    add({"op": "eng_pkg_assign", "by": ANN, "fw": "nist-ai-rmf", "to": CLEO})
+    add({"op": "eng_pkg_assign", "by": SAM, "fw": "gdpr", "to": CLEO})                        # no such questionnaire
+    add({"op": "eng_pkg_assign", "by": SAM, "fw": "nist-ai-rmf", "to": CLEO, "domain": "nope"})
+    add({"op": "eng_pkg_assign", "by": SAM, "fw": "nist-ai-rmf", "to": " "})
+    add({"op": "eng_pkg_assign", "by": SAM, "fw": "nist-ai-rmf", "to": CLEO, "due": "1 Dec"})
+    add({"op": "eng_pkg_assign", "by": SAM, "fw": "nist-ai-rmf", "to": CARL})
+    add({"op": "eng_pkg_assign", "by": SAM, "fw": "nist-ai-rmf", "to": CLEO, "due": "2026-12-01", "domain": dom_gov})
+    add({"op": "eng_pkg_assign", "by": DINA, "fw": "owasp-llm", "to": CLEO, "due": "2026-11-01"})
+    add({"op": "eng_pkg_questions", "fw": "nist-ai-rmf", "domain": dom_gov})
+    add({"op": "eng_pkg_questions", "fw": "nist-ai-rmf"})
+    add({"op": "eng_pkg_progress", "fw": "nist-ai-rmf"})
+    # answering
+    c0 = gov[0]
+    add({"op": "eng_respond", "by": CARL, "fw": "nist-ai-rmf", "control": c0, "answer": "implemented"})       # not carl's domain
+    add({"op": "eng_respond", "by": SAM, "fw": "nist-ai-rmf", "control": c0, "answer": "implemented"})        # scoping lead cannot answer
+    add({"op": "eng_respond", "by": CLEO, "fw": "nist-ai-rmf", "control": "nope", "answer": "implemented"})
+    add({"op": "eng_respond", "by": CLEO, "fw": "nist-ai-rmf", "control": owasp[0].id, "answer": "implemented"})
+    add({"op": "eng_respond", "by": CLEO, "fw": "nist-ai-rmf", "control": c0, "answer": "maybe"})
+    add({"op": "eng_respond", "by": CLEO, "fw": "nist-ai-rmf", "control": c0, "answer": "not_applicable"})
+    add({"op": "eng_respond", "by": CLEO, "fw": "nist-ai-rmf", "control": c0, "answer": "implemented", "evidence": [""]})
+    add({"op": "eng_respond", "by": CLEO, "fw": "nist-ai-rmf", "control": c0, "answer": "implemented", "evidence": "policy.pdf"})
+    add({"op": "eng_respond", "by": CLEO, "fw": "nist-ai-rmf", "control": c0, "answer": "implemented", "comment": "x" * 1001})
+    add({"op": "eng_respond", "by": CLEO, "fw": "nist-ai-rmf", "control": c0, "answer": "implemented", "evidence": ["AI policy v2", "https://x.example/p"]})
+    add({"op": "eng_respond", "by": CLEO, "fw": "nist-ai-rmf", "control": gov[1], "answer": "not_applicable", "comment": "No in-house model"})
+    add({"op": "eng_submit_items", "by": CLEO, "fw": "nist-ai-rmf", "domain": dom_gov})                          # one unanswered
+    add({"op": "eng_submit_items", "by": CLEO, "fw": "nist-ai-rmf", "domain": "nope"})
+    add({"op": "eng_respond", "by": CLEO, "fw": "nist-ai-rmf", "control": gov[2], "answer": "partially_implemented", "comment": "Draft only"})
+    add({"op": "eng_submit_items", "by": CARL, "fw": "nist-ai-rmf", "domain": dom_gov})                          # not carl's
+    add({"op": "eng_submit_items", "by": CLEO, "fw": "nist-ai-rmf", "domain": dom_gov})
+    add({"op": "eng_submit_items", "by": CLEO, "fw": "nist-ai-rmf", "domain": dom_gov})                          # nothing to submit
+    add({"op": "eng_respond", "by": CLEO, "fw": "nist-ai-rmf", "control": c0, "answer": "not_implemented"})      # submitted
+    # shared answers: only where the answerer may answer in the other questionnaire
+    add({"op": "eng_respond", "by": CARL, "fw": "nist-ai-rmf", "control": tp_nist[0], "answer": "implemented", "shared": True})
+    add({"op": "eng_respond", "by": DINA, "fw": "nist-ai-rmf", "control": tp_nist[1], "answer": "implemented", "comment": "Supplier register", "shared": True})
+    # reviewing
+    add({"op": "eng_review_items", "by": CLEO, "fw": "nist-ai-rmf", "domain": dom_gov, "action": "approve"})
+    add({"op": "eng_review_items", "by": SAM, "fw": "nist-ai-rmf", "domain": dom_gov, "action": "return"})
+    add({"op": "eng_review_items", "by": SAM, "fw": "nist-ai-rmf", "domain": dom_gov, "action": "bounce"})
+    add({"op": "eng_review_items", "by": SAM, "fw": "nist-ai-rmf", "domain": dom_tp, "action": "approve"})        # nothing submitted
+    add({"op": "eng_review_items", "by": SAM, "fw": "nist-ai-rmf", "domain": dom_gov, "action": "return", "note": "Attach the policy"})
+    add({"op": "eng_respond", "by": CLEO, "fw": "nist-ai-rmf", "control": c0, "answer": "implemented", "evidence": ["AI policy v3"]})
+    add({"op": "eng_submit_items", "by": CLEO, "fw": "nist-ai-rmf", "domain": dom_gov})
+    add({"op": "eng_review_items", "by": ANN, "fw": "nist-ai-rmf", "domain": dom_gov, "action": "approve"})
+    add({"op": "eng_submit_pkg", "by": DINA, "fw": "nist-ai-rmf"})                                             # not all approved
+    add({"op": "eng_pkg_progress", "fw": "nist-ai-rmf"})
+    # a whole questionnaire, start to lock
+    for c in owasp:
+        add({"op": "eng_respond", "by": CLEO, "fw": "owasp-llm", "control": c.id, "answer": "implemented", "evidence": ["Scan report"]})
+    for d in sorted({c.domain_id for c in owasp}):
+        add({"op": "eng_submit_items", "by": CLEO, "fw": "owasp-llm", "domain": d})
+        add({"op": "eng_review_items", "by": DINA, "fw": "owasp-llm", "domain": d, "action": "approve"})
+    add({"op": "eng_submit_pkg", "by": CLEO, "fw": "owasp-llm"})                                               # collaborators cannot submit
+    add({"op": "eng_submit_pkg", "by": DINA, "fw": "owasp-llm"})
+    add({"op": "eng_submit_pkg", "by": DINA, "fw": "owasp-llm"})
+    add({"op": "eng_respond", "by": CLEO, "fw": "owasp-llm", "control": owasp[0].id, "answer": "not_implemented"})
+    add({"op": "eng_pkg_assign", "by": SAM, "fw": "owasp-llm", "to": CARL})
+    add({"op": "eng_return_pkg", "by": SAM, "fw": "owasp-llm", "reason": "x"})                                  # scoping lead cannot return
+    add({"op": "eng_return_pkg", "by": ANN, "fw": "owasp-llm", "reason": " "})
+    add({"op": "eng_return_pkg", "by": ANN, "fw": "owasp-llm", "reason": "Evidence is out of date"})
+    add({"op": "eng_return_pkg", "by": ANN, "fw": "owasp-llm", "reason": "again"})
+    add({"op": "eng_reopen_assignment", "by": SAM, "reason": "Scope changed"})                                  # answers exist
+    # who has what to do
+    add({"op": "eng_tasks", "name": CLEO})
+    add({"op": "eng_tasks", "name": " carl "})
+    add({"op": "eng_tasks", "name": "nobody"})
+    add({"op": "eng_pkg_overview"})
+    add({"op": "eng_pkg_progress", "fw": "owasp-llm"})
+    add({"op": "eng_validate"})
+    # a later date: assignments become overdue
+    add({"op": "clock", "iso": "2027-01-05T09:00:00Z"})
+    add({"op": "eng_pkg_progress", "fw": "nist-ai-rmf"})
+    add({"op": "eng_tasks", "name": CLEO})
+    return o
+
+
+def test_python_and_browser_agree_on_roles_and_questionnaires(tmp_path, lib, monkeypatch):
+    ops = roles_scenario(lib)
+    py_scope = fresh(lib)
+    py_results = norm(run_ops_py(py_scope, lib, ops, monkeypatch))
+    js = node(tmp_path, {"mode": "wfops", "scope": fresh(lib).data, "ops": ops})
+    errors = sum(1 for r in py_results if "error" in r)
+    assert errors >= 40 and sum(1 for r in py_results if "ok" in r) >= 80
+    for i, (op, p, j) in enumerate(zip(ops, py_results, js["results"])):
+        assert p == j, f"step {i} ({op['op']}) differs:\n python : {str(p)[:600]}\n browser: {str(j)[:600]}"
+    assert len(js["results"]) == len(py_results)
+    assert js["scope"] == norm(py_scope.data)
+    assert js["scope"]["audit"][-1]["hash"] == py_scope.data["audit"][-1]["hash"]
+    e = py_scope.data["engagement"]
+    assert e["packages"]["owasp-llm"]["status"] == "open" and e["roles"]["admin"] == ["ada", "Bo"]
+    shared = [r["ok"]["shared_to"] for op, r in zip(ops, py_results) if op.get("shared") and "ok" in r]
+    assert shared == [0, 1]       # carl may not answer in the other questionnaire, dina may
+
+
+def test_validation_of_corrupted_roles_and_questionnaires_matches_python(tmp_path, lib, monkeypatch):
+    good = fresh(lib)
+    run_ops_py(good, lib, roles_scenario(lib)[:112], monkeypatch)
+    base = copy.deepcopy(good.data)
+    assert "packages" in base["engagement"] and base["engagement"]["packages"]
+    cases = []
+    c = copy.deepcopy(base)
+    e = c["engagement"]
+    e["roles"] = {"wizard": ["x"], "scoping_lead": ["sam", " "]}
+    p = e["packages"]["nist-ai-rmf"]
+    p["status"] = "weird"
+    p["controls"].append("owasp-llm:LLM01")
+    p["assignments"]["nope"] = {"to": "x", "due": None}
+    first = next(iter(p["responses"]))
+    p["responses"][first]["answer"] = "maybe"
+    p["responses"]["nope"] = {"answer": "implemented", "status": "approved"}
+    e["packages"]["gdpr"] = {"framework": "gdpr", "status": "open", "controls": [], "assignments": {}, "responses": {}}
+    cases.append(c)
+    c = copy.deepcopy(base)
+    c["engagement"]["packages"]["nist-ai-rmf"]["status"] = "submitted"
+    c["engagement"]["applicable"] = None
+    cases.append(c)
+    c = copy.deepcopy(base)
+    c["engagement"]["roles"] = {"scoping_lead": ["sam"]}
+    cases.append(c)
+    cases.append(copy.deepcopy(base))
+    for case in cases:
+        errs, warns = validate_engagement(Scope(copy.deepcopy(case), lib))
+        got = node(tmp_path, {"mode": "wfops", "scope": copy.deepcopy(case), "ops": [{"op": "eng_validate"}]})["results"][0]["ok"]
+        assert sorted(got["errors"]) == sorted(errs) and got["warnings"] == warns
+    assert errs == []

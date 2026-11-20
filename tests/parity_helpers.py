@@ -125,6 +125,18 @@ def run_ops_py(scope, lib, ops, monkeypatch):
         "eng_rules": lambda o: en.effective_rules(),
         "eng_compute": lambda o: en.compute_recommendations(),
         "eng_applicable": lambda o: en.applicable_frameworks(),
+        "eng_roles_set": lambda o: en.set_roles(o["by"], o["role"], o["names"]),
+        "eng_roles_list": lambda o: en.roles(),
+        "eng_pkg_assign": lambda o: en.package_assign(o["by"], o["fw"], o["to"], o.get("due"), o.get("domain")),
+        "eng_pkg_questions": lambda o: [{**q, "requirement": len(q["requirement"] or "")} for q in en.package_questions(o["fw"], o.get("domain"))],
+        "eng_respond": lambda o: en.respond(o["by"], o["fw"], o["control"], o["answer"], o.get("comment", ""), o.get("evidence"), bool(o.get("shared"))),
+        "eng_submit_items": lambda o: en.submit_items(o["by"], o["fw"], o["domain"]),
+        "eng_review_items": lambda o: en.review_items(o["by"], o["fw"], o["domain"], o["action"], o.get("note", "")),
+        "eng_submit_pkg": lambda o: en.submit_package(o["by"], o["fw"]),
+        "eng_return_pkg": lambda o: en.return_package(o["by"], o["fw"], o.get("reason", "")),
+        "eng_pkg_progress": lambda o: en.package_progress(o["fw"]),
+        "eng_pkg_overview": lambda o: en.packages_overview(),
+        "eng_tasks": lambda o: en.my_tasks(o["name"]),
         "eng_validate": lambda o: dict(zip(("errors", "warnings"), engmod.validate_engagement(scope))),
     }
     results = []
