@@ -7,8 +7,10 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from aicontrols import engagement as engmod
 from aicontrols import grc as grcmod
 from aicontrols import workflow as wfmod
+from aicontrols.engagement import Engagement
 from aicontrols.grc import Grc
 from aicontrols.scope import ScopeError
 from aicontrols.workflow import Workflow
@@ -30,6 +32,7 @@ def run_ops_py(scope, lib, ops, monkeypatch):
     sid = "bot"
     w = Workflow(scope)
     g = Grc(scope)
+    en = Engagement(scope)
     now = {"t": dt.datetime(2026, 10, 27, 12, 0, 0, tzinfo=dt.timezone.utc)}
     monkeypatch.setattr(wfmod, "_now", lambda: now["t"])
     ccs = lambda: list(w.state(sid)["common_controls"])  # noqa: E731
@@ -103,6 +106,26 @@ def run_ops_py(scope, lib, ops, monkeypatch):
         "grc_report": lambda o: g.report(sid, o["by"], record=True),
         "grc_report_md": lambda o: g.report_markdown(sid, o["by"], record=True),
         "grc_validate": lambda o: dict(zip(("errors", "warnings"), grcmod.validate_grc(scope))),
+        # ---- engagement layer
+        "eng_client": lambda o: en.set_client(o["by"], o["fields"]),
+        "eng_onboard": lambda o: en.onboard(o["by"]),
+        "eng_answer": lambda o: en.answer(o["by"], o["q"], o["value"]),
+        "eng_delegate": lambda o: en.delegate(o["by"], o["q"], o["to"], o.get("due")),
+        "eng_submit": lambda o: en.submit_scoping(o["by"]),
+        "eng_reopen": lambda o: en.reopen_scoping(o["by"], o.get("reason", "")),
+        "eng_rule_set": lambda o: en.rule_set(o["by"], o["rule"]),
+        "eng_rule_disable": lambda o: en.rule_disable(o["by"], o["rule"], o.get("disabled", True)),
+        "eng_recommend": lambda o: en.recommend(o["by"]),
+        "eng_review": lambda o: en.review(o["by"], o["framework"], o["action"], o.get("reason", "")),
+        "eng_finalise": lambda o: en.finalise(o["by"], o.get("reason", "")),
+        "eng_reopen_assignment": lambda o: en.reopen_assignment(o["by"], o.get("reason", "")),
+        "eng_overview": lambda o: en.overview(),
+        "eng_questionnaire": lambda o: en.questionnaire(),
+        "eng_progress": lambda o: en.progress(),
+        "eng_rules": lambda o: en.effective_rules(),
+        "eng_compute": lambda o: en.compute_recommendations(),
+        "eng_applicable": lambda o: en.applicable_frameworks(),
+        "eng_validate": lambda o: dict(zip(("errors", "warnings"), engmod.validate_engagement(scope))),
     }
     results = []
     for o in ops:

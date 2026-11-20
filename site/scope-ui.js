@@ -59,6 +59,10 @@
       const wv = AIC.workflow.validate(parsed, data);
       errors.push(...wv.errors); warnings.push(...wv.warnings);
     }
+    if (!errors.length && AIC.engagement && parsed.engagement) {  // and the client engagement layer
+      const ev = AIC.engagement.validate(parsed, data);
+      errors.push(...ev.errors); warnings.push(...ev.warnings);
+    }
     if (!errors.length && AIC.grc && parsed.grc) {  // and the GRC layer (registers, links, settings)
       const gv = AIC.grc.validate(parsed, data);
       errors.push(...gv.errors); warnings.push(...gv.warnings);
@@ -68,7 +72,7 @@
     }
     if (scope && scope.systems.length && !confirm("Replace the scope currently in this browser with the imported file?")) return;
     scope = parsed; ui.sid = scope.systems[0] ? scope.systems[0].id : null;
-    ui.screen = ui.sid ? "workspace" : "intro"; ui.sub = "overview"; ui.open = null;
+    ui.screen = ui.sid ? "workspace" : (scope.engagement ? "engagement" : "intro"); ui.sub = "overview"; ui.open = null;
     persist(); dirty = false;
     say(`Imported ${scope.systems.length} system(s).` + (warnings.length ? " Warning: " + warnings[0] : ""), warnings.length ? "warn" : "ok");
     render();
@@ -116,7 +120,8 @@
       el("p", { class: "privacy" }, el("strong", {}, "Private by design. "), "Everything stays in this browser. Nothing is uploaded. Download your scope file to keep or share it; it also works with the aicontrols command line."),
       el("div", { class: "row" },
         el("button", { type: "button", class: "primary", onclick: () => startWizard() }, "Start the wizard"),
-        el("button", { type: "button", class: "ghost", onclick: pickFile }, "Import a scope file or spreadsheet")),
+        el("button", { type: "button", class: "ghost", onclick: pickFile }, "Import a scope file or spreadsheet"),
+        el("button", { type: "button", class: "ghost", onclick: startEngagement }, "Start a client engagement")),
       templateBuilder(),
       el("p", { class: "muted" }, "A planning aid, not legal advice or a compliance verdict."));
   }
@@ -248,8 +253,8 @@
   }
   function subTabs() {
     return el("div", { class: "subtabs", role: "group", "aria-label": "Scope views" },
-      ["overview", "controls", "workflow", "grc", "export"].map((k) => el("button", { type: "button", "aria-pressed": String(ui.sub === k), onclick: () => { ui.sub = k; ui.open = null; render(); } },
-        { overview: "Overview & plan", controls: "Controls", workflow: "Workflow", grc: "GRC", export: "Export" }[k])));
+      ["overview", "controls", "workflow", "grc", "engagement", "export"].map((k) => el("button", { type: "button", "aria-pressed": String(ui.sub === k), onclick: () => { ui.sub = k; ui.open = null; render(); } },
+        { overview: "Overview & plan", controls: "Controls", workflow: "Workflow", grc: "GRC", engagement: "Engagement", export: "Export" }[k])));
   }
 
   // ---- overview --------------------------------------------------------------------------
@@ -510,15 +515,43 @@
       el("p", { class: "muted" }, "Planning aid, not a compliance verdict."));
   }
 
+  // ---- client engagement (offline consulting layer) -----------------------------------------------
+  const engagementPanel = () => (AIC.engagementUI ? AIC.engagementUI.panel() : el("p", { class: "muted" }, "The engagement module did not load."));
+  function engagementBar() {
+    return el("div", { class: "card wsbar" },
+      el("h2", {}, `Client engagement: ${scope.organization}`),
+      el("div", { class: "row" },
+        el("button", { type: "button", class: "primary", onclick: downloadScopeFile }, "Download scope file"),
+        scope.systems.length ? el("button", { type: "button", class: "ghost", onclick: () => { ui.sid = ui.sid || scope.systems[0].id; ui.screen = "workspace"; ui.sub = "engagement"; render(); } }, "Open the scope workspace") : null,
+        el("button", { type: "button", class: "ghost", onclick: () => startWizard() }, "Scope an AI system for this client"),
+        el("button", { type: "button", class: "ghost", onclick: pickFile }, "Import"),
+        el("button", { type: "button", class: "ghost danger", onclick: () => {
+          if (!confirm("Remove ALL scope data from this browser? Download your scope file first if you want to keep it.")) return;
+          try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
+          scope = null; ui.sid = null; ui.screen = "intro"; dirty = false; say("Scope data removed from this browser.", "ok"); render();
+        } }, "Reset")),
+      el("p", { class: "muted save" }, storageOk ? (dirty ? "Saved in this browser. You have changes not yet downloaded." : "Saved in this browser.")
+        : "Your browser blocked local storage: changes are kept only until you close this tab. Download your scope file."));
+  }
+  function startEngagement() {
+    if (scope && !confirm("This replaces the scope currently in this browser. Download it first if you want to keep it. Continue?")) return;
+    const name = (prompt("Client organisation name:") || "").trim();
+    if (!name) return;
+    scope = S.newScope(name, data); ui.sid = null; ui.screen = "engagement"; dirty = false; persist(); dirty = false;
+    say(`Started an engagement for “${name}”. Next: complete the client profile.`, "ok"); render();
+  }
+
   // ---- render -------------------------------------------------------------------------------------
   function render() {
     if (!root) return;
     const msg = el("div", { id: "scope-msg", role: "status" }); paintMsg(msg);
     let body;
     if (ui.screen === "wizard" && ui.wiz) body = ui.wiz.phase === "form" ? wizardForm() : wizardResults();
+    else if (ui.screen === "engagement" && scope) body = [engagementBar(), engagementPanel()];
     else if (ui.screen === "workspace" && scope && ui.sid) {
       body = [workspaceBar(), subTabs(), ui.sub === "overview" ? overviewPanel() : ui.sub === "controls" ? controlsPanel()
-        : ui.sub === "workflow" ? (AIC.workflowUI ? AIC.workflowUI.panel() : el("p", { class: "muted" }, "The workflow module did not load.")) : ui.sub === "grc" ? (AIC.grcUI ? AIC.grcUI.panel() : el("p", { class: "muted" }, "The GRC module did not load.")) : exportPanel()];
+        : ui.sub === "workflow" ? (AIC.workflowUI ? AIC.workflowUI.panel() : el("p", { class: "muted" }, "The workflow module did not load.")) : ui.sub === "grc" ? (AIC.grcUI ? AIC.grcUI.panel() : el("p", { class: "muted" }, "The GRC module did not load."))
+        : ui.sub === "engagement" ? engagementPanel() : exportPanel()];
     } else body = introScreen();
     fill(root, msg, ui.report ? el("ul", { class: "report" }, ui.report.map((t) => el("li", {}, t))) : null, body);
   }
@@ -526,7 +559,7 @@
   // What the workflow screens (workflow-ui.js) may use. Reads current state through getters.
   AIC.scopeUI = {
     get scope() { return scope; }, get data() { return data; }, get sid() { return ui.sid; },
-    persist, say, render, attempt, download, slug, fwName,
+    persist, say, render, attempt, download, slug, fwName, downloadScopeFile,
   };
 
   AIC.onData = function (d) {
@@ -535,6 +568,7 @@
     if (saved) {
       const { errors } = S.validate(saved, data);
       if (!errors.length && saved.systems.length) { scope = saved; ui.sid = saved.systems[0].id; ui.screen = "workspace"; }
+      else if (!errors.length && saved.engagement) { scope = saved; ui.screen = "engagement"; }
     }
     render();
   };

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.0 - 2026-11-20
+
+- **Client engagement layer, phase 2** (new): onboard a client, run a scoping questionnaire (25 questions, eight domains,
+  delegation, submit and lock), get framework recommendations from editable rules (each with confidence, triggering answers
+  and rationale), review them (removing or adding needs a written justification) and finalise the applicable set.
+  `aicontrols engagement` and a **Client engagement** screen in the browser. See `docs/ENGAGEMENT.md`.
+- Offline by design: one scope file per client, no accounts, tenancy, uploads or notifications (see
+  `docs/ENGAGEMENT_LAYER_PLAN.md` for why). Rules that point at a framework the library does not have (Qatar PDPPL, a
+  data governance framework) are reported as skipped, not dropped.
+- Scope file schema 1.3 (1.0 to 1.2 still load). `tools/build_site_spec.py` now generates both layer specs.
+- Python and browser engagement engines are checked against each other step by step, audit hash chain included.
+- Fix: a scope file with no AI system now says so instead of "several systems exist".
+
 ## 0.8.0 - 2026-11-09
 
 - **GRC management layer** (new): requirement, clause, policy/guideline/SOP, control, evidence, audit chain on top of scoping

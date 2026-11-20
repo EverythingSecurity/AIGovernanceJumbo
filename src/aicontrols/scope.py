@@ -98,6 +98,8 @@ class Scope:
         if system_id is None:
             if len(systems) == 1:
                 return systems[0]
+            if not systems:
+                raise ScopeError("no AI system in this file yet; add one first (aicontrols scope add-system)")
             raise ScopeError("several systems exist; choose one with -s/--system")
         for s in systems:
             if s["id"] == system_id:
@@ -331,8 +333,8 @@ class Scope:
         errors: List[str] = []
         warnings: List[str] = []
         d = self.data
-        if d.get("schema_version") not in (SCHEMA_VERSION, "1.1", "1.2"):
-            errors.append(f"schema_version must be {SCHEMA_VERSION!r} (or '1.1'/'1.2' when the workflow or GRC layer is used)")
+        if d.get("schema_version") not in (SCHEMA_VERSION, "1.1", "1.2", "1.3"):
+            errors.append(f"schema_version must be {SCHEMA_VERSION!r} (or '1.1'/'1.2'/'1.3' when the workflow, GRC or engagement layer is used)")
         if d.get("dataset_version") != self.lib.dataset_version:
             warnings.append(f"scope was created against dataset {d.get('dataset_version')}, "
                             f"installed dataset is {self.lib.dataset_version}; re-check decisions")
@@ -378,4 +380,9 @@ class Scope:
             g_errors, g_warnings = validate_grc(self)
             errors += g_errors
             warnings += g_warnings
+        if d.get("engagement"):
+            from .engagement import validate_engagement  # imported lazily: the engagement layer builds on Scope and Workflow
+            e_errors, e_warnings = validate_engagement(self)
+            errors += e_errors
+            warnings += e_warnings
         return errors, warnings

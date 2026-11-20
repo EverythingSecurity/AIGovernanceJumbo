@@ -17,9 +17,10 @@
       "enum": [
         "1.0",
         "1.1",
-        "1.2"
+        "1.2",
+        "1.3"
       ],
-      "description": "1.1 files may carry the workflow layer, 1.2 the GRC layer (`grc`), written by `aicontrols workflow` and `aicontrols grc`."
+      "description": "1.1 files may carry the workflow layer, 1.2 the GRC layer (`grc`), 1.3 the client engagement layer (`engagement`), written by `aicontrols workflow`, `aicontrols grc` and `aicontrols engagement`."
     },
     "dataset_version": {
       "type": "string",
@@ -250,6 +251,185 @@
         },
         "markers": {
           "type": "object"
+        }
+      }
+    },
+    "engagement": {
+      "type": "object",
+      "description": "Client engagement: profile, scoping questionnaire answers, applicability rules, recommendations, review and the finalised framework set (written by `aicontrols engagement`). Rules and questions are in src/aicontrols/engagement_spec.json.",
+      "additionalProperties": false,
+      "properties": {
+        "client": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "sector": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "country": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "size": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "contributor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "status": {
+              "enum": [
+                "invited",
+                "onboarded"
+              ]
+            }
+          },
+          "required": [
+            "status"
+          ]
+        },
+        "scoping": {
+          "type": "object",
+          "properties": {
+            "questionnaire_version": {
+              "type": "integer"
+            },
+            "status": {
+              "enum": [
+                "not_started",
+                "in_progress",
+                "submitted"
+              ]
+            },
+            "responses": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "value",
+                  "by",
+                  "at"
+                ],
+                "properties": {
+                  "value": {
+                    "type": [
+                      "string",
+                      "array"
+                    ]
+                  },
+                  "by": {
+                    "type": "string"
+                  },
+                  "at": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "delegations": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "to"
+                ],
+                "properties": {
+                  "to": {
+                    "type": "string"
+                  },
+                  "due": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            },
+            "submitted_at": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "submitted_by": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "rules": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "custom": {
+              "type": "object"
+            },
+            "disabled": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "recommendation": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "review": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "action",
+              "by",
+              "at"
+            ],
+            "properties": {
+              "action": {
+                "enum": [
+                  "accept",
+                  "add",
+                  "remove"
+                ]
+              },
+              "justification": {
+                "type": "string"
+              },
+              "by": {
+                "type": "string"
+              },
+              "at": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "applicable": {
+          "type": [
+            "object",
+            "null"
+          ]
         }
       }
     }

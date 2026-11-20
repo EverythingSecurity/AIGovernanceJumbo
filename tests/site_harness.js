@@ -13,6 +13,7 @@ const data = { controls: controls.controls, frameworks: load("frameworks").frame
 
 const WF = require(path.join(root, "site", "workflow.js"));
 const GRC = require(path.join(root, "site", "grc.js"));
+const ENG = require(path.join(root, "site", "engagement.js"));
 
 // Runs a list of workflow operations against a scope file; the Python twin lives in tests/test_workflow_parity.py.
 function runOps(scope, ops) {
@@ -83,6 +84,26 @@ function runOps(scope, ops) {
     grc_report: (o) => GRC.report(scope, data, sid, o.by, true),
     grc_report_md: (o) => GRC.reportMarkdown(scope, data, sid, o.by, true),
     grc_validate: () => GRC.validate(scope, data),
+    // ---- engagement layer
+    eng_client: (o) => ENG.setClient(scope, o.by, o.fields),
+    eng_onboard: (o) => ENG.onboard(scope, o.by),
+    eng_answer: (o) => ENG.answer(scope, o.by, o.q, o.value),
+    eng_delegate: (o) => ENG.delegate(scope, o.by, o.q, o.to, o.due || null),
+    eng_submit: (o) => ENG.submitScoping(scope, o.by),
+    eng_reopen: (o) => ENG.reopenScoping(scope, o.by, o.reason || ""),
+    eng_rule_set: (o) => ENG.ruleSet(scope, o.by, o.rule),
+    eng_rule_disable: (o) => ENG.ruleDisable(scope, o.by, o.rule, "disabled" in o ? o.disabled : true),
+    eng_recommend: (o) => ENG.recommend(scope, data, o.by),
+    eng_review: (o) => ENG.review(scope, data, o.by, o.framework, o.action, o.reason || ""),
+    eng_finalise: (o) => ENG.finalise(scope, o.by, o.reason || ""),
+    eng_reopen_assignment: (o) => ENG.reopenAssignment(scope, o.by, o.reason || ""),
+    eng_overview: () => ENG.overview(scope),
+    eng_questionnaire: () => ENG.questionnaire(scope),
+    eng_progress: () => ENG.progress(scope),
+    eng_rules: () => ENG.effectiveRules(scope),
+    eng_compute: () => ENG.computeRecommendations(scope, data),
+    eng_applicable: () => ENG.applicableFrameworks(scope),
+    eng_validate: () => ENG.validate(scope, data),
   };
   for (const o of ops) {
     try { results.push({ ok: handlers[o.op](o) }); }
@@ -139,7 +160,7 @@ if (job.mode === "wizard") {
     }),
   };
 } else if (job.mode === "sha") {
-  out = { sha: job.strings.map((s) => WF.sha256(s)), canon: job.objects.map((o) => WF.canon(o)), spec: WF.SPEC, grc_spec: GRC.SPEC };
+  out = { sha: job.strings.map((s) => WF.sha256(s)), canon: job.objects.map((o) => WF.canon(o)), spec: WF.SPEC, grc_spec: GRC.SPEC, engagement_spec: ENG.SPEC };
 } else if (job.mode === "errors") {
   out = job.answers_list.map((a) => { try { W.normalize(a); return null; } catch (e) { return e.message; } });
 }

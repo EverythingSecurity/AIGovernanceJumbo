@@ -42,6 +42,8 @@ lib.related("gdpr:Art.33")
 
 **Connect requirements to controls, documents and evidence:** `aicontrols grc` adds a requirement-to-control mapping matrix, policy/SOP/evidence links, registers (documents, risks, findings, audits), coverage across frameworks, KPIs and KRIs, and the ISO 42001 streams. See [docs/GRC.md](docs/GRC.md).
 
+**Onboard a client and work out which frameworks apply:** `aicontrols engagement` records a client, runs a scoping questionnaire, applies editable rules to recommend frameworks with reasons, and records the reviewer's decisions. Offline, no accounts. See [docs/ENGAGEMENT.md](docs/ENGAGEMENT.md).
+
 **Scope and run the workflow in the browser:** the **My scope** tab of the web explorer runs the wizard, plan, tracker, the six-stage governance **Workflow** and the **GRC** view locally (nothing is uploaded) and reads and writes the same scope file.
 
 **Web explorer:** `python -m http.server` in the repo root, then open
