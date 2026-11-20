@@ -12,6 +12,7 @@
   only an assessor or admin can return it. Optional "apply to the same domain in other frameworks". Overdue and "my tasks"
   views. `aicontrols engagement roles | packages | package | tasks` and two new views in the browser.
 - **Client engagement** is now its own top-level tab (it was hidden two clicks deep under My scope).
+- Fix: the Explore filters (long Domain dropdown) overflowed sideways on phone-width screens; the top tabs now wrap.
 - **My role**: choose a role and press “Take this role” to add the name in “Acting as” to it (the first person takes Engagement admin).
 - **Act-as picker**: once roles are assigned, a dropdown lists everyone with their roles, so you choose who you are acting as instead of typing a name.
 - Python and browser engines checked against each other on a 130-step scenario (audit hash chain included).
