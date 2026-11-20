@@ -218,3 +218,4 @@ details.policy fieldset.rules legend { padding: 0 8px 0 0; font-weight: 700; fon
 div.actor { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
 div.actor label { display: flex; flex-direction: column; gap: 4px; max-width: 320px; }
 div.actor small { flex-basis: 100%; }
+.myrole { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; }

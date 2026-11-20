@@ -37,6 +37,24 @@
     }
     return [...out.values()].sort((x, y) => (x.name.toLowerCase() < y.name.toLowerCase() ? -1 : 1));
   }
+  // "My role": choose a role and add the name in "Acting as" to it. This is how the first person becomes admin.
+  function myRole() {
+    const S = scope(), name = actor.trim();
+    const mine = E.enabled(S) && name ? E.rolesOf(S, name) : [];
+    let sel;
+    return el("div", { class: "myrole" },
+      el("label", {}, "My role", sel = el("select", { "aria-label": "Role to take" }, el("option", { value: "" }, "Choose a role…"),
+        E.SPEC.roles.map((r) => el("option", { value: r.id }, r.name)))),
+      el("button", { type: "button", onclick: () => {
+        const who = actor.trim();
+        if (!sel.value) return ui().say("Choose a role first.", "error");
+        if (!who) return ui().say("Type your name in “or type a name” first, then choose your role.", "error");
+        if (!E.enabled(scope())) return ui().say("Save the client profile first (Client tab), then take a role.", "error");
+        const holders = E.roles(scope()).find((r) => r.id === sel.value).people;
+        act((a) => E.setRoles(scope(), a, sel.value, holders.some((h) => h.trim().toLowerCase() === who.toLowerCase()) ? holders : [...holders, who]), `${who} is now ${E.SPEC.roles.find((r) => r.id === sel.value).name}.`);
+      } }, "Take this role"),
+      el("small", { class: "muted" }, name ? (mine.length ? `${name} holds: ${mine.map((r) => E.SPEC.roles.find((x) => x.id === r).name).join(", ")}.` : `${name} holds no role yet.`) : "Enter your name first."));
+  }
   function actorField() {
     const list = people(), now = actor.trim().toLowerCase();
     const known = list.find((p) => p.name.trim().toLowerCase() === now);
@@ -49,6 +67,7 @@
       el("label", {}, list.length ? "or type a name" : "Acting as",
         el("input", { value: actor, placeholder: "your name", autocomplete: "name", "aria-describedby": "eng-actor-help",
           oninput: (e) => { actor = e.target.value; try { localStorage.setItem(ACTOR_KEY, actor); } catch (err) { /* ignore */ } } })),
+      myRole(),
       el("small", { id: "eng-actor-help", class: "muted" }, list.length
         ? "Roles are checked against this name. Recorded with every change; stored in this browser only."
         : "Recorded with every change. Stored in this browser only. Assign people to roles on the Roles tab and they will appear here to pick."));
