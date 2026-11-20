@@ -11,6 +11,7 @@
   answer with evidence references and submit for review; reviewers approve or return; the contributor submits and locks it;
   only an assessor or admin can return it. Optional "apply to the same domain in other frameworks". Overdue and "my tasks"
   views. `aicontrols engagement roles | packages | package | tasks` and two new views in the browser.
+- **Act-as picker**: once roles are assigned, a dropdown lists everyone with their roles, so you choose who you are acting as instead of typing a name.
 - Python and browser engines checked against each other on a 130-step scenario (audit hash chain included).
 - `finalise` in the browser engine now takes the dataset, to build the questionnaires.
 

@@ -27,11 +27,31 @@
     ui().render();
     return out;
   }
+  // Everyone who holds a role (plus the client contributor), with their roles, so you can pick who you are acting as.
+  function people() {
+    const S = scope(), out = new Map();
+    if (E.enabled(S)) {
+      for (const r of E.roles(S)) for (const n of r.people) { const k = n.trim().toLowerCase(); out.set(k, { name: n, roles: [...((out.get(k) || {}).roles || []), r.name] }); }
+      const c = S.engagement.client.contributor;
+      if (c) { const k = c.trim().toLowerCase(); const cur = out.get(k) || { name: c, roles: [] }; if (!cur.roles.includes("Client contributor")) cur.roles.push("Client contributor"); out.set(k, cur); }
+    }
+    return [...out.values()].sort((x, y) => (x.name.toLowerCase() < y.name.toLowerCase() ? -1 : 1));
+  }
   function actorField() {
-    return el("label", { class: "actor" }, "Acting as",
-      el("input", { value: actor, placeholder: "your name", autocomplete: "name", "aria-describedby": "eng-actor-help",
-        oninput: (e) => { actor = e.target.value; try { localStorage.setItem(ACTOR_KEY, actor); } catch (err) { /* ignore */ } } }),
-      el("small", { id: "eng-actor-help", class: "muted" }, "Recorded with every change. Stored in this browser only."));
+    const list = people(), now = actor.trim().toLowerCase();
+    const known = list.find((p) => p.name.trim().toLowerCase() === now);
+    return el("div", { class: "actor" },
+      list.length ? el("label", {}, "Act as (pick a person and role)", el("select", { "aria-describedby": "eng-actor-help", onchange: (e) => {
+        if (!e.target.value) return;
+        actor = e.target.value; try { localStorage.setItem(ACTOR_KEY, actor); } catch (err) { /* ignore */ }
+        ui().render();
+      } }, el("option", { value: "" }, "Choose…"), list.map((p) => el("option", { value: p.name, selected: known && known.name === p.name ? "" : null }, `${p.name} (${p.roles.join(", ")})`)))) : null,
+      el("label", {}, list.length ? "or type a name" : "Acting as",
+        el("input", { value: actor, placeholder: "your name", autocomplete: "name", "aria-describedby": "eng-actor-help",
+          oninput: (e) => { actor = e.target.value; try { localStorage.setItem(ACTOR_KEY, actor); } catch (err) { /* ignore */ } } })),
+      el("small", { id: "eng-actor-help", class: "muted" }, list.length
+        ? "Roles are checked against this name. Recorded with every change; stored in this browser only."
+        : "Recorded with every change. Stored in this browser only. Assign people to roles on the Roles tab and they will appear here to pick."));
   }
   function tabs() {
     return el("div", { class: "subtabs", role: "group", "aria-label": "Engagement views" }, TABS.map(([k, label]) =>
